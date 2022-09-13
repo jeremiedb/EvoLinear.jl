@@ -3,24 +3,16 @@ using EvoLinear
 using BenchmarkTools
 
 nobs = 1_000_000
+nfeats = 100
 T = Float32
 
-x1 = rand(T, nobs)
-x2 = rand(T, nobs)
+x = randn(T, nobs, nfeats)
+coef = rand(T, nfeats)
 
-β1 = 2
-β2 = 3
-
-x = hcat(x1, x2)
-y = β1 * x1 + β2 * x2 + rand(T, nobs) * T(0.001)
-
-loss = EvoLinear.MSE
-m = EvoLinear.EvoLinearModel{loss}(1.1, 2.2)
-typeof(m)
+y =  x * coef .+ rand(T, nobs) * T(0.001)
 
 config = EvoLinear.EvoLinearRegressor(loss=:mse)
-m = EvoLinear.fit(config; x, y)
-m
+@time m = EvoLinear.fit(config; x, y)
 
 # EvoLinear.predict(m, x)
 m, cache = EvoLinear.init(config, x)

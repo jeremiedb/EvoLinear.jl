@@ -1,15 +1,26 @@
-mutable struct EvoLinearRegressor{T<:AbstractFloat,S<:Int}
-    nrounds::S
+abstract type Loss end
+struct MSE <: Loss end
+struct Logistic <: Loss end
+
+const loss_types = Dict(
+    :mse => MSE,
+    :logistic => Logistic
+)
+
+mutable struct EvoLinearRegressor{T<:AbstractFloat,I<:Int}
+    loss::Symbol
+    nrounds::I
     lambda::T
     rowsample::T
     colsample::T
-    nbins::S
+    nbins::I
     metric::Symbol
     rng
     device
 end
 
 function EvoLinearRegressor(;
+    loss=:mse,
     nrounds=10,
     lambda=0.0, #
     rowsample=1.0,
@@ -22,12 +33,12 @@ function EvoLinearRegressor(;
     T = Float32
     # rng = mk_rng(rng)::Random.AbstractRNG
 
-    model = EvoLinearRegressor(nrounds, T(lambda), T(rowsample), T(colsample), nbins, metric, rng, device)
+    model = EvoLinearRegressor(loss, nrounds, T(lambda), T(rowsample), T(colsample), nbins, metric, rng, device)
 
     return model
 end
 
-mutable struct EvoLearner
+mutable struct EvoLinearModel{L<:Loss}
     coef
     bias
 end

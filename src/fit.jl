@@ -1,7 +1,8 @@
 function init(config::EvoLinearRegressor, x)
 
     T = Float32
-    m = EvoLearner(zeros(T, size(x, 2)), zero(T))
+    loss = loss_types[config.loss]
+    m = EvoLinearModel{loss}(zeros(T, size(x, 2)), zero(T))
     p = predict(m, x)
     p_coef = predict_coef(m, x)
 
@@ -31,24 +32,43 @@ function fit(config::EvoLinearRegressor; x, y, w=nothing)
     return m
 end
 
-function fit!(m::EvoLearner, cache, config::EvoLinearRegressor; x, y, w=nothing)
+function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor; x, y, w=nothing) where {L}
 
     m = cache.m
     ∇¹, ∇² = cache.∇¹ .* 0, cache.∇² .* 0
 
+    ####################################################
+    # update all coefs then bias
+    ####################################################
+    # @info "predict time"
     p = predict(m, x)
-    # update_∇!(∇¹, ∇², x, y, p, w)
-    update_∇¹!(∇¹, x, y, p, w)
-    update_∇²!(∇², x, y, p, w)
-
+    # update_∇!(L, ∇¹, ∇², x, y, p, w)
+    update_∇¹!(L, ∇¹, x, y, p, w)
+    update_∇²!(L, ∇², x, y, p, w)
     update_coef!(m, ∇¹, ∇²)
+    # @info "bias update time"
     update_bias!(m, x, y, w)
+
+    ####################################################
+    # update bias following each feature update
+    ####################################################
+    # for feat in axes(x, 2)
+    #     p = predict(m, x)
+    #     update_∇¹!(L, ∇¹, x, y, p, w, feat)
+    #     update_∇²!(L, ∇², x, y, p, w, feat)
+    #     update_coef!(m, ∇¹, ∇², feat)
+    #     update_bias!(m, x, y, w)
+    # end
 
     return nothing
 end
 
 function update_coef!(m, ∇¹, ∇²)
     m.coef .+= -∇¹ ./ ∇²
+    return nothing
+end
+function update_coef!(m, ∇¹, ∇², feat)
+    m.coef[feat] += -∇¹[feat] ./ ∇²[feat]
     return nothing
 end
 function update_bias!(m, x, y, w)
@@ -63,6 +83,15 @@ function predict(m, x)
     return p
 end
 function predict_coef(m, x)
+    p = x * m.coef
+    return p
+end
+
+function predict(m::EvoLinearModel{Logistic}, x)
+    p = x * m.coef .+ m.bias
+    return p
+end
+function predict_coef(m::EvoLinearModel{Logistic}, x)
     p = x * m.coef
     return p
 end
