@@ -19,7 +19,7 @@ function EvoLinearRegressor(;
     rng=123,
     device="cpu")
 
-    T = Float64
+    T = Float32
     # rng = mk_rng(rng)::Random.AbstractRNG
 
     model = EvoLinearRegressor(nrounds, T(lambda), T(rowsample), T(colsample), nbins, metric, rng, device)
@@ -27,7 +27,7 @@ function EvoLinearRegressor(;
     return model
 end
 
-struct EvoLearner
+mutable struct EvoLearner
     coef
     bias
 end

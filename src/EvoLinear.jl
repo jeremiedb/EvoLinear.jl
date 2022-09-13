@@ -1,5 +1,6 @@
 module EvoLinear
 
+using Base.Threads: @threads
 using StatsBase
 using Statistics: mean, std
 
