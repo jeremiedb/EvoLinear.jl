@@ -3,8 +3,8 @@ function init(config::EvoLinearRegressor, x)
     T = Float32
     loss = loss_types[config.loss]
     m = EvoLinearModel{loss}(zeros(T, size(x, 2)), zero(T))
-    p = predict(m, x)
-    p_coef = predict_coef(m, x)
+    p_linear = predict_linear(m, x)
+    p_proj = predict_proj(m, x)
 
     ∇¹ = init_∇¹(x)
     ∇² = init_∇²(x)
@@ -12,7 +12,7 @@ function init(config::EvoLinearRegressor, x)
 
     cache = (
         m=m,
-        p=p, p_coef=p_coef,
+        p_linear=p_linear, p_proj=p_proj,
         ∇¹=∇¹, ∇²=∇²,
         ∇_bias=∇_bias
     )
@@ -24,43 +24,46 @@ function fit(config::EvoLinearRegressor; x, y, w=nothing)
     m, cache = init(config::EvoLinearRegressor, x)
     fit!(m, cache, config; x, y, w)
 
-    p = predict(m, x)
+    p = predict_proj(m, x)
     metric = mse(p, y)
     @info metric
 
     return m
 end
 
-function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor; x, y, w=nothing) where {L}
+function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
+    x, y, w=nothing, updater="all") where {L}
 
     m = cache.m
     ∇¹, ∇², ∇_bias = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇_bias .* 0
 
-    ####################################################
-    # update all coefs then bias
-    ####################################################
-    # @info "predict time"
-    p = predict(m, x)
-    # update_∇!(L, ∇¹, ∇², x, y, p, w)
-    update_∇¹!(L, ∇¹, x, y, p, w)
-    update_∇²!(L, ∇², x, y, p, w)
-    update_coef!(m, ∇¹, ∇²)
-    # @info "bias update time"
-    p = predict(m, x)
-    update_∇_bias!(L, ∇_bias, x, y, p, w)
-    update_bias!(m, ∇_bias)
-
-    ####################################################
-    # update bias following each feature update
-    ####################################################
-    # for feat in axes(x, 2)
-    #     p = predict(m, x)
-    #     update_∇¹!(L, ∇¹, x, y, p, w, feat)
-    #     update_∇²!(L, ∇², x, y, p, w, feat)
-    #     update_coef!(m, ∇¹, ∇², feat)
-    #     update_bias!(m, x, y, w)
-    # end
-
+    if updater == "all"
+        ####################################################
+        # update all coefs then bias
+        ####################################################
+        p = predict_proj(m, x)
+        update_∇!(L, ∇¹, ∇², x, y, p, w)
+        update_coef!(m, ∇¹, ∇²)
+        p = predict_proj(m, x)
+        update_∇_bias!(L, ∇_bias, x, y, p, w)
+        update_bias!(m, ∇_bias)
+    elseif updater == "single"
+        @warn "single update needs to be fixed - preds update needs linear projection basis"
+        ####################################################
+        # update bias following each feature update
+        ####################################################
+        p = predict_proj(m, x)
+        for feat in axes(x, 2)
+            update_∇!(L, ∇¹, ∇², x, y, p, w, feat)
+            Δ_coef = coef_update(m, ∇¹, ∇², feat)
+            p .+= Δ_coef .* x[:, feat]
+            m.coef[feat] += Δ_coef
+        end
+        update_∇_bias!(L, ∇_bias, x, y, p, w)
+        update_bias!(m, ∇_bias)
+    else
+        @warn "invalid updater"
+    end
     return nothing
 end
 
@@ -72,25 +75,24 @@ function update_coef!(m, ∇¹, ∇², feat)
     m.coef[feat] += -∇¹[feat] / ∇²[feat]
     return nothing
 end
+function coef_update(m, ∇¹, ∇², feat)
+    -∇¹[feat] / ∇²[feat]
+end
 function update_bias!(m, ∇_bias)
     m.bias += -∇_bias[1] / ∇_bias[2]
     return nothing
 end
 
-function predict(m, x)
-    p = x * m.coef .+ m.bias
-    return p
-end
-function predict_coef(m, x)
-    p = x * m.coef
-    return p
-end
 
-function predict(m::EvoLinearModel{Logistic}, x)
+function predict_linear(m, x)
     p = x * m.coef .+ m.bias
     return p
 end
-function predict_coef(m::EvoLinearModel{Logistic}, x)
-    p = x * m.coef
+function predict_proj(m::EvoLinearModel{MSE}, x)
+    p = predict_linear(m, x)
+    return p
+end
+function predict_proj(m::EvoLinearModel{Logistic}, x)
+    p = sigmoid(predict_linear(m, x))
     return p
 end

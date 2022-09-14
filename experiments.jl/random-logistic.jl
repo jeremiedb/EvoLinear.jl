@@ -19,11 +19,20 @@ m
 
 # EvoLinear.predict(m, x)
 @time m, cache = EvoLinear.init(config, x)
-@time EvoLinear.fit!(m, cache, config; x, y);
+@time EvoLinear.fit!(m, cache, config; x, y, updater="all");
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
-# @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
-@info m
-p = EvoLinear.sigmoid(EvoLinear.predict(m, x))
+# all: 139.865 ms (522 allocations: 782.04 MiB)
+# single: 597.298 ms (1213 allocations: 1.13 GiB)
+@btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y, updater="all")
+# @info m
+p = EvoLinear.predict_proj(m, x)
+
+# 12.310 ms (6 allocations: 7.63 MiB)
+# @btime p1 = EvoLinear.predict_linear($m, $x);
+
+# 885.100 μs (2 allocations: 3.81 MiB)
+# @btime p1 = EvoLinear.sigmoid($p);
+
 y_logit = EvoLinear.logit(y)
 metric = EvoLinear.mse(p, y)
 metric = EvoLinear.mae(p, y)
@@ -34,13 +43,14 @@ metric = EvoLinear.logloss(p, y)
 # xgboost aprams
 params_xgb = [
     "booster" => "gblinear",
+    "updater" => "shotgun", # shotgun / coord_descent
     "eta" => 1.0,
     "objective" => "reg:logistic",
-    "print_every_n" => 5,
-    "subsample" => 1.0,
-    "colsample_bytree" => 1.0]
+    "print_every_n" => 5]
 
 nthread = Threads.nthreads()
+nthread = 8
+
 nrounds = 20
 
 # metrics = ["rmse"]
