@@ -8,20 +8,19 @@ function init(config::EvoLinearRegressor, x)
 
     ∇¹ = init_∇¹(x)
     ∇² = init_∇²(x)
+    ∇_bias = zeros(T, 2)
 
     cache = (
         m=m,
-        p=p,
-        p_coef=p_coef,
-        ∇¹=∇¹,
-        ∇²=∇²
+        p=p, p_coef=p_coef,
+        ∇¹=∇¹, ∇²=∇²,
+        ∇_bias=∇_bias
     )
     return m, cache
 
 end
 
 function fit(config::EvoLinearRegressor; x, y, w=nothing)
-
     m, cache = init(config::EvoLinearRegressor, x)
     fit!(m, cache, config; x, y, w)
 
@@ -35,7 +34,7 @@ end
 function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor; x, y, w=nothing) where {L}
 
     m = cache.m
-    ∇¹, ∇² = cache.∇¹ .* 0, cache.∇² .* 0
+    ∇¹, ∇², ∇_bias = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇_bias .* 0
 
     ####################################################
     # update all coefs then bias
@@ -47,7 +46,9 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor; x, y, w=n
     update_∇²!(L, ∇², x, y, p, w)
     update_coef!(m, ∇¹, ∇²)
     # @info "bias update time"
-    update_bias!(m, x, y, w)
+    p = predict(m, x)
+    update_∇_bias!(L, ∇_bias, x, y, p, w)
+    update_bias!(m, ∇_bias)
 
     ####################################################
     # update bias following each feature update
@@ -68,13 +69,11 @@ function update_coef!(m, ∇¹, ∇²)
     return nothing
 end
 function update_coef!(m, ∇¹, ∇², feat)
-    m.coef[feat] += -∇¹[feat] ./ ∇²[feat]
+    m.coef[feat] += -∇¹[feat] / ∇²[feat]
     return nothing
 end
-function update_bias!(m, x, y, w)
-    p̄ = mean(predict_coef(m, x))
-    ȳ = mean(y)
-    m.bias = ȳ - p̄
+function update_bias!(m, ∇_bias)
+    m.bias += -∇_bias[1] / ∇_bias[2]
     return nothing
 end
 

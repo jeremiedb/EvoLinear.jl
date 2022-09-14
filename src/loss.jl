@@ -26,7 +26,7 @@ function update_∇¹!(L::Type{MSE}, ∇¹, x, y, p, w)
     end
     return nothing
 end
-function update_∇¹!(L::Type{MSE}, ∇¹, x, y, p, w, feat)
+function update_∇¹!(::Type{MSE}, ∇¹, x, y, p, w, feat)
     @inbounds for i in axes(x, 1)
         ∇¹[feat] += 2 * x[i, feat] * (p[i] - y[i])
     end
@@ -38,9 +38,16 @@ function update_∇²!(L::Type{MSE}, ∇², x, y, p, w)
     end
     return nothing
 end
-function update_∇²!(L::Type{MSE}, ∇², x, y, p, w, feat)
+function update_∇²!(::Type{MSE}, ∇², x, y, p, w, feat)
     @inbounds for i in axes(x, 1)
         ∇²[feat] += 2 * x[i, feat]^2
+    end
+    return nothing
+end
+function update_∇_bias!(::Type{MSE}, ∇_bias, x, y, p, w)
+    @inbounds for i in axes(x, 1)
+        ∇_bias[1] += 2 * (p[i] - y[i])
+        ∇_bias[2] += 2
     end
     return nothing
 end
@@ -69,7 +76,7 @@ function update_∇¹!(L::Type{Logistic}, ∇¹, x, y, p, w)
     end
     return nothing
 end
-function update_∇¹!(L::Type{Logistic}, ∇¹, x, y, ps, w, feat)
+function update_∇¹!(::Type{Logistic}, ∇¹, x, y, ps, w, feat)
     @inbounds for i in axes(x, 1)
         ∇¹[feat] += x[i, feat] * (ps[i] - y[i])
     end
@@ -82,9 +89,17 @@ function update_∇²!(L::Type{Logistic}, ∇², x, y, p, w)
     end
     return nothing
 end
-function update_∇²!(L::Type{Logistic}, ∇², x, y, ps, w, feat)
+function update_∇²!(::Type{Logistic}, ∇², x, y, ps, w, feat)
     @inbounds for i in axes(x, 1)
         ∇²[feat] += ps[i] * (1 - ps[i]) * x[i, feat]^2
+    end
+    return nothing
+end
+function update_∇_bias!(::Type{Logistic}, ∇_bias, x, y, p, w)
+    ps = sigmoid(p)
+    @inbounds for i in axes(x, 1)
+        ∇_bias[1] += (ps[i] - y[i])
+        ∇_bias[2] += ps[i] * (1 - ps[i])
     end
     return nothing
 end
@@ -92,6 +107,12 @@ end
 
 function mse(pred, y)
     return mean((pred .- y) .^ 2)
+end
+function mae(pred, y)
+    return mean(abs.(pred .- y))
+end
+function logloss(pred, y)
+    return -mean(y .* log.(pred) .+ (1 .- y) .* log.(1 .- pred))
 end
 # function mse(pred, y, w)
 #     return mean((pred .- y) .^ 2)
