@@ -7,33 +7,33 @@ const loss_types = Dict(
     :logistic => Logistic
 )
 
-mutable struct EvoLinearRegressor{T<:AbstractFloat,I<:Int}
-    loss::Symbol
+mutable struct EvoLinearRegressor{T<:AbstractFloat,I<:Int,S<:Symbol}
+    loss::S
+    updater::S
     nrounds::I
-    lambda::T
-    rowsample::T
-    colsample::T
+    L1::T
+    L2::T
     nbins::I
-    metric::Symbol
+    metric::S
     rng
-    device
+    device::S
 end
 
 function EvoLinearRegressor(;
     loss=:mse,
+    updater=:all,
     nrounds=10,
-    lambda=0.0, #
-    rowsample=1.0,
-    colsample=1.0,
+    L1=0.0, #
+    L2=0.0, #
     nbins=32,
     metric=:mse,
     rng=123,
-    device="cpu")
+    device=:cpu)
 
     T = Float32
     # rng = mk_rng(rng)::Random.AbstractRNG
 
-    model = EvoLinearRegressor(loss, nrounds, T(lambda), T(rowsample), T(colsample), nbins, metric, rng, device)
+    model = EvoLinearRegressor(loss, updater, nrounds, T(L1), T(L2), nbins, metric, rng, device)
 
     return model
 end

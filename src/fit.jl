@@ -8,13 +8,11 @@ function init(config::EvoLinearRegressor, x)
 
     ∇¹ = init_∇¹(x)
     ∇² = init_∇²(x)
-    ∇_bias = zeros(T, 2)
+    ∇b = zeros(T, 2)
 
     cache = (
-        m=m,
         p_linear=p_linear, p_proj=p_proj,
-        ∇¹=∇¹, ∇²=∇²,
-        ∇_bias=∇_bias
+        ∇¹=∇¹, ∇²=∇², ∇b=∇b
     )
     return m, cache
 
@@ -22,8 +20,11 @@ end
 
 function fit(config::EvoLinearRegressor; x, y, w=nothing)
     m, cache = init(config::EvoLinearRegressor, x)
-    fit!(m, cache, config; x, y, w)
 
+    for i in 1:config.nrounds
+        fit!(m, cache, config; x, y, w)
+    end
+    
     p = predict_proj(m, x)
     metric = mse(p, y)
     @info metric
@@ -32,12 +33,11 @@ function fit(config::EvoLinearRegressor; x, y, w=nothing)
 end
 
 function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
-    x, y, w=nothing, updater="all") where {L}
+    x, y, w=nothing) where {L}
 
-    m = cache.m
-    ∇¹, ∇², ∇_bias = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇_bias .* 0
+    ∇¹, ∇², ∇b = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇b .* 0
 
-    if updater == "all"
+    if config.updater == :all
         ####################################################
         # update all coefs then bias
         ####################################################
@@ -45,9 +45,9 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
         update_∇!(L, ∇¹, ∇², x, y, p, w)
         update_coef!(m, ∇¹, ∇²)
         p = predict_proj(m, x)
-        update_∇_bias!(L, ∇_bias, x, y, p, w)
-        update_bias!(m, ∇_bias)
-    elseif updater == "single"
+        update_∇_bias!(L, ∇b, x, y, p, w)
+        update_bias!(m, ∇b)
+    elseif config.updater == :single
         @warn "single update needs to be fixed - preds update needs linear projection basis"
         ####################################################
         # update bias following each feature update
@@ -59,8 +59,8 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
             p .+= Δ_coef .* x[:, feat]
             m.coef[feat] += Δ_coef
         end
-        update_∇_bias!(L, ∇_bias, x, y, p, w)
-        update_bias!(m, ∇_bias)
+        update_∇_bias!(L, ∇b, x, y, p, w)
+        update_bias!(m, ∇b)
     else
         @warn "invalid updater"
     end
@@ -78,8 +78,8 @@ end
 function coef_update(m, ∇¹, ∇², feat)
     -∇¹[feat] / ∇²[feat]
 end
-function update_bias!(m, ∇_bias)
-    m.bias += -∇_bias[1] / ∇_bias[2]
+function update_bias!(m, ∇b)
+    m.bias += -∇b[1] / ∇b[2]
     return nothing
 end
 

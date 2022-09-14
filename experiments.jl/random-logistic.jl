@@ -2,8 +2,6 @@ using Revise
 using EvoLinear
 using BenchmarkTools
 
-using XGBoost
-
 nobs = 1_000_000
 nfeats = 100
 T = Float32
@@ -13,17 +11,17 @@ coef = randn(T, nfeats)
 
 y = EvoLinear.sigmoid(x * coef .+ rand(T, nobs) * T(0.1))
 
-config = EvoLinear.EvoLinearRegressor(loss=:logistic)
+config = EvoLinear.EvoLinearRegressor(loss=:logistic, updater=:all)
 @time m = EvoLinear.fit(config; x, y)
 m
 
 # EvoLinear.predict(m, x)
 @time m, cache = EvoLinear.init(config, x)
-@time EvoLinear.fit!(m, cache, config; x, y, updater="all");
+@time EvoLinear.fit!(m, cache, config; x, y);
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # all: 139.865 ms (522 allocations: 782.04 MiB)
 # single: 597.298 ms (1213 allocations: 1.13 GiB)
-@btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y, updater="all")
+# @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
 # @info m
 p = EvoLinear.predict_proj(m, x)
 
@@ -40,6 +38,7 @@ metric = EvoLinear.logloss(p, y)
 @info metric
 
 
+using XGBoost
 # xgboost aprams
 params_xgb = [
     "booster" => "gblinear",
