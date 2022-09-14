@@ -38,15 +38,15 @@ end
 ###################################
 function update_∇!(::Type{MSE}, ∇¹, ∇², x, y, p, w, feat)
     @inbounds for i in axes(x, 1)
-        ∇¹[feat] += 2 * x[i, feat] * (p[i] - y[i])
-        ∇²[feat] += 2 * x[i, feat]^2
+        ∇¹[feat] += 2 * w[i] * x[i, feat] * (p[i] - y[i])
+        ∇²[feat] += 2 * w[i] * x[i, feat]^2
     end
     return nothing
 end
 function update_∇_bias!(::Type{MSE}, ∇_bias, x, y, p, w)
     @inbounds for i in axes(x, 1)
-        ∇_bias[1] += 2 * (p[i] - y[i])
-        ∇_bias[2] += 2
+        ∇_bias[1] += 2 * w[i] * (p[i] - y[i])
+        ∇_bias[2] += 2 * w[i]
     end
     return nothing
 end
@@ -57,16 +57,16 @@ end
 function update_∇!(::Type{Logistic}, ∇¹, ∇², x, y, p, w, feat)
     # p = sigmoid(p)
     @inbounds for i in axes(x, 1)
-        ∇¹[feat] += x[i, feat] * (p[i] - y[i])
-        ∇²[feat] += p[i] * (1 - p[i]) * x[i, feat]^2
+        ∇¹[feat] += w[i] * x[i, feat] * (p[i] - y[i])
+        ∇²[feat] += w[i] * p[i] * (1 - p[i]) * x[i, feat]^2
     end
     return nothing
 end
 function update_∇_bias!(::Type{Logistic}, ∇_bias, x, y, p, w)
     # p = sigmoid(p)
     @inbounds for i in axes(x, 1)
-        ∇_bias[1] += (p[i] - y[i])
-        ∇_bias[2] += p[i] * (1 - p[i])
+        ∇_bias[1] += w[i] * (p[i] - y[i])
+        ∇_bias[2] += w[i] * p[i] * (1 - p[i])
     end
     return nothing
 end

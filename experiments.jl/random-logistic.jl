@@ -11,7 +11,7 @@ coef = randn(T, nfeats)
 
 y = EvoLinear.sigmoid(x * coef .+ rand(T, nobs) * T(0.1))
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-1, L2=100, updater=:all)
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:logistic, L1=5e-2, L2=1e-2, updater=:all)
 @time m = EvoLinear.fit(config; x, y, metric=:logloss)
 sum(m.coef .== 0)
 

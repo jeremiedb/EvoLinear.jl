@@ -11,7 +11,7 @@ function init(config::EvoLinearRegressor;
     ∇² = init_∇²(x)
     ∇b = zeros(T, 2)
 
-    isnothing(w) ? w = ones(T, size(x, 2)) : nothing
+    isnothing(w) ? w = ones(T, size(x, 1)) : nothing
     ∑w = sum(w)
 
     cache = (
