@@ -1,33 +1,19 @@
 # EvoLinear
 
+ML library implementing linear boosting along L1/L2 regularization.
+Currently supports mse (squared-error) and logistic (logloss) regression tasks.
 
-L(β) = (p - y)²
 
-p = p₀ + βx
-L(β) = (p₀ + βx - y)²
+```julia
+using EvoLinear
+config = EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=10)
+m = EvoLinear.fit(config; x, y, metric=:mse)
+p = EvoLinear.predict_proj(m, x)
+```
 
-L'(β) = 2x(p₀ + βx - y)
-L'(β) = 2xp₀ + 2x²β - 2xy
-L'(β) = 2x(p - y)
-L''(β) = 2x²
-
-L'(β) Is a vector of length = num features.
-It needs to be updated after each iteration as it depends on the predictions (p).
-
-L''(β) is constant throughout the iterations: only depends on input x. 
-Is a vector of length = num features.
-
-Algo:
-Initialize L''. 
-For each feature, calculate 2x.
-
-Initialize L' base. 
-For each feature, calculate x.
-
-Calculate L'. 
-Compute 2(p-y) and add it to L' base
-
-Compute gain associated to each feature
-Select highest gain
-Update weight
-Update bias
+```julia
+using EvoLinear
+config = EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-1, L2=10)
+m = EvoLinear.fit(config; x, y, metric=:mse)
+p = EvoLinear.predict_proj(m, x)
+```
