@@ -11,13 +11,13 @@ coef = randn(T, nfeats)
 
 y = EvoLinear.sigmoid(x * coef .+ rand(T, nobs) * T(0.1))
 
-config = EvoLinear.EvoLinearRegressor(loss=:logistic, updater=:all)
-@time m = EvoLinear.fit(config; x, y)
-m
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-1, L2=100, updater=:all)
+@time m = EvoLinear.fit(config; x, y, metric=:logloss)
+sum(m.coef .== 0)
 
 # EvoLinear.predict(m, x)
-@time m, cache = EvoLinear.init(config, x)
-@time EvoLinear.fit!(m, cache, config; x, y);
+@time m, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m, cache, config);
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # all: 139.865 ms (522 allocations: 782.04 MiB)
 # single: 597.298 ms (1213 allocations: 1.13 GiB)
@@ -53,8 +53,8 @@ nthread = 8
 nrounds = 20
 
 # metrics = ["rmse"]
-metrics = ["mae"]
-# metrics = ["logloss"]
+# metrics = ["mae"]
+metrics = ["logloss"]
 
 @info "xgboost train:"
 @time m_xgb = xgboost(x, nrounds, label=y, param=params_xgb, metrics=metrics, nthread=nthread, silent=0);

@@ -10,15 +10,16 @@ x = randn(T, nobs, nfeats)
 # x = randn(T, nobs, nfeats) .+ 5 .* rand(T, nobs, nfeats)
 coef = randn(T, nfeats)
 
-y =  x * coef .+ rand(T, nobs) * T(0.01)
+y = x * coef .+ rand(T, nobs) * T(0.1)
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, updater=:all)
-@time m = EvoLinear.fit(config; x, y)
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=10, updater=:all)
+@time m = EvoLinear.fit(config; x, y, metric=:mse)
 m
+sum(m.coef .== 0)
 
 # EvoLinear.predict(m, x)
-m, cache = EvoLinear.init(config, x)
-@time EvoLinear.fit!(m, cache, config; x, y)
+@time m, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m, cache, config);
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
 @info m

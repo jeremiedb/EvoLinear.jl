@@ -79,5 +79,12 @@ function mae(pred, y)
     return mean(abs.(pred .- y))
 end
 function logloss(pred, y)
-    return -mean(y .* log.(pred) .+ (1 .- y) .* log.(1 .- pred))
+    ϵ = eps(eltype(y)(1e-7))
+    return -mean(y .* log.(pred .+ ϵ) .+ (1 .- y) .* log.(1 .- pred .+ ϵ))
 end
+
+const metric_dict = Dict(
+    :mse => mse,
+    :mae => mae,
+    :logloss => logloss
+)

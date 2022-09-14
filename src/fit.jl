@@ -1,4 +1,5 @@
-function init(config::EvoLinearRegressor, x)
+function init(config::EvoLinearRegressor;
+    x, y, w=nothing)
 
     T = Float32
     loss = loss_types[config.loss]
@@ -10,32 +11,51 @@ function init(config::EvoLinearRegressor, x)
     ∇² = init_∇²(x)
     ∇b = zeros(T, 2)
 
+    isnothing(w) ? w = ones(T, size(x, 2)) : nothing
+    ∑w = sum(w)
+
     cache = (
         p_linear=p_linear, p_proj=p_proj,
-        ∇¹=∇¹, ∇²=∇², ∇b=∇b
+        ∇¹=∇¹, ∇²=∇², ∇b=∇b,
+        x=x, y=y, w=w,
+        ∑w=∑w
     )
     return m, cache
 
 end
 
-function fit(config::EvoLinearRegressor; x, y, w=nothing)
-    m, cache = init(config::EvoLinearRegressor, x)
+function fit(config::EvoLinearRegressor;
+    x, y, w=nothing,
+    x_eval=nothing, y_eval=nothing, w_eval=nothing,
+    metric=:mse,
+    print_every_n=1,
+    tol=1e-5)
+
+    m, cache = init(config::EvoLinearRegressor; x, y, w)
+
+    metric_f = metric_dict[metric]
+    p = predict_proj(m, x)
+    tracker = metric_f(p, y)
+    @info "initial $metric:" tracker
 
     for i in 1:config.nrounds
-        fit!(m, cache, config; x, y, w)
+        fit!(m, cache, config)
+
+        if i % print_every_n == 0
+            p = predict_proj(m, x)
+            tracker = metric_f(p, y)
+            @info "$metric iter $i:" tracker
+        end
     end
-    
-    p = predict_proj(m, x)
-    metric = mse(p, y)
-    @info metric
 
     return m
 end
 
-function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
-    x, y, w=nothing) where {L}
+function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
 
     ∇¹, ∇², ∇b = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇b .* 0
+    x, y, w = cache.x, cache.y, cache.w
+    ∑w = cache.∑w
 
     if config.updater == :all
         ####################################################
@@ -43,7 +63,7 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
         ####################################################
         p = predict_proj(m, x)
         update_∇!(L, ∇¹, ∇², x, y, p, w)
-        update_coef!(m, ∇¹, ∇²)
+        update_coef!(m, ∇¹, ∇², ∑w, config.L1, config.L2)
         p = predict_proj(m, x)
         update_∇_bias!(L, ∇b, x, y, p, w)
         update_bias!(m, ∇b)
@@ -67,8 +87,11 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor;
     return nothing
 end
 
-function update_coef!(m, ∇¹, ∇²)
-    m.coef .+= -∇¹ ./ ∇²
+function update_coef!(m, ∇¹, ∇², ∑w, L1, L2)
+    update = -∇¹ ./ (∇² .+ L2 * ∑w)
+    update[abs.(update).<L1] .= 0
+    m.coef .+= update
+    # m.coef .+= -∇¹ ./ (∇² .+ L2 * ∑w)
     return nothing
 end
 function update_coef!(m, ∇¹, ∇², feat)
