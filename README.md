@@ -4,7 +4,7 @@ ML library implementing linear boosting along L1/L2 regularization.
 Currently supports mse (squared-error) and logistic (logloss) regression tasks.
 
 
-`EvoLinear.fit` takes `x::Matrix` and y::Vector as inputs, plus optionally `w::Vector` as weights.
+`EvoLinear.fit` takes `x::Matrix` and `y::Vector` as inputs, plus optionally `w::Vector` as weights.
 
 ```julia
 using EvoLinear
