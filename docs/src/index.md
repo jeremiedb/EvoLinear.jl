@@ -1,14 +1,16 @@
 # EvoLinear.jl
 
-ML library implementing linear boosting with L1/L2 regularization.
+ML library implementing linear boosting with L1 and L2 regularization.
+
 For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTrees.jl).
 
-Currently supports:    
+Supported loss functions:
+
 - mse (squared-error)
 - logistic (logloss) regression
-- Poisson
-- Gamma
-- Tweedie
+- poisson
+- gamma
+- tweedie
 
 ## Installation
 
@@ -22,14 +24,7 @@ pkg> add https://github.com/jeremiedb/EvoLinear.jl
 
 ```julia
 using EvoLinear
-config = EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
-m = EvoLinear.fit(config; x, y, metric=:mse)
-p = EvoLinear.predict_proj(m, x)
-```
-
-```julia
-using EvoLinear
-config = EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-1, L2=1e-2)
+config = EvoLinearRegressor(loss=:mse, L1=1e-1, L2=1e-2, nrounds=10)
 m = EvoLinear.fit(config; x, y, metric=:mse)
 p = EvoLinear.predict_proj(m, x)
 ```
