@@ -20,7 +20,7 @@ pkg> add https://github.com/jeremiedb/EvoLinear.jl
 
 ## Getting started
 
-`EvoLinear.fit` takes `x::Matrix` and `y::Vector` as inputs, plus optionally `w::Vector` as weights.
+Build a configuration struct with `EvoLinearRegressor`. Then `EvoLinear.fit` takes `x::Matrix` and `y::Vector` as inputs, plus optionally `w::Vector` as weights and fits a linear boosted model.
 
 ```julia
 using EvoLinear
