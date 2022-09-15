@@ -21,4 +21,6 @@ makedocs(
 # for more information.
 deploydocs(
     repo="github.com/jeremiedb/EvoLinear.jl.git",
+    target="build",
+    devbranch="main"
 )
