@@ -1,6 +1,6 @@
 # EvoLinear.jl
 
-ML library implementing linear boosting along L1/L2 regularization.
+ML library implementing linear boosting with L1/L2 regularization.
 For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTrees.jl).
 
 Currently supports:    
