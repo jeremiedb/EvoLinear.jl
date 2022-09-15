@@ -1,7 +1,7 @@
 name = "EvoLinear"
 uuid = "ab853011-1780-437f-b4b5-5de6f4777246"
 authors = ["jeremie <jeremie.desgagne.bouchard@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
