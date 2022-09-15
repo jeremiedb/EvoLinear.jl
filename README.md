@@ -2,6 +2,8 @@
 
 > ML library implementing linear boosting with L1/L2 regularization.
 
+<br>
+
 | Documentation | CI Status | Coverage |
 |:------------------------:|:----------------:|:----------------:|
 | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] | [![][codecov-img]][codecov-url] |
@@ -19,7 +21,8 @@
 [codecov-url]: https://codecov.io/gh/jeremiedb/EvoLinear.jl?branch=main
 
 
-Currently supports:    
+Supported loss functions:
+
 - mse (squared-error)
 - logistic (logloss) regression
 - Poisson
