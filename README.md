@@ -6,9 +6,9 @@ For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTr
 
 <br>
 
-| Documentation | CI Status | Coverage |
+| Documentation | CI Status |
 |:------------------------:|:----------------:|:----------------:|
-| [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] | [![][codecov-img]][codecov-url] |
+| [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] |
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://jeremiedb.github.io/EvoLinear.jl/dev
@@ -18,9 +18,6 @@ For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTr
 
 [ci-img]: https://github.com/jeremiedb/EvoLinear.jl/workflows/CI/badge.svg
 [ci-url]: https://github.com/jeremiedb/EvoLinear.jl/actions?query=workflow%3ACI+branch%3Amain
-
-[codecov-img]: https://codecov.io/github/jeremiedb/EvoLinear.jl/branch/main/graph/badge.svg
-[codecov-url]: https://codecov.io/github/jeremiedb/EvoLinear.jl?branch=main
 
 <br>
 
