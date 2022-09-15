@@ -24,6 +24,26 @@ function init(config::EvoLinearRegressor;
 
 end
 
+
+"""
+    fit(config::EvoLinearRegressor;
+        x, y, w=nothing,
+        x_eval=nothing, y_eval=nothing, w_eval=nothing,
+        metric=:mse,
+        print_every_n=1,
+        tol=1e-5)
+
+`Provided a `config`, EvoLinear.fit` takes `x` and `y` as features and target inputs, plus optionally `w` as weights and train a Linear boosted model.
+
+# Arguments
+- `config::EvoLinearRegressor`: 
+
+# Keyword arguments
+- `x::AbstractMatrix`: Features matrix. Dimensions are `[nobs, num_features]`.
+- `y::AbstractVector`: Vector of observed targets.
+- `w=nothing`: Vector of weights. Can be be either a `Vector` or `nothing`. If `nothing`, assumes a vector of 1s. 
+- `metric=:mse`: Evaluation metric to be tracked through each iteration.
+"""
 function fit(config::EvoLinearRegressor;
     x, y, w=nothing,
     x_eval=nothing, y_eval=nothing, w_eval=nothing,

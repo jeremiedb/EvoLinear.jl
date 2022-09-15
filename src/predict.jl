@@ -1,7 +1,34 @@
-function predict_linear(m, x)
+"""
+    predict_linear(m, x)
+
+Returns the predictions on the linear basis from model `m` using the features matrix `x`.
+
+# Arguments
+
+- `m::EvoLinearModel`
+- `x`
+"""
+function predict_linear(m::EvoLinearModel, x)
     p = x * m.coef .+ m.bias
     return p
 end
+
+"""
+    predict_proj(m, x)
+
+Returns the predictions on the projected basis from model `m` using the features matrix `x`.
+
+- `MSE`: pred_proj = pred_linear
+- `Logistic`: pred_proj = sigmoid(pred_linear)
+- `Poisson`: pred_proj = exp(pred_linear)
+- `Gamma`: pred_proj = exp(pred_linear)
+- `Tweedie`: pred_proj = exp(pred_linear)
+
+# Arguments
+
+- `m::EvoLinearModel`
+- `x`
+"""
 function predict_proj(m::EvoLinearModel{MSE}, x)
     p = predict_linear(m, x)
     return p
