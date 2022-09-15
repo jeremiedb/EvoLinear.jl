@@ -1,10 +1,16 @@
 abstract type Loss end
 struct MSE <: Loss end
 struct Logistic <: Loss end
+struct Poisson <: Loss end
+struct Gamma <: Loss end
+struct Tweedie <: Loss end
 
 const loss_types = Dict(
     :mse => MSE,
-    :logistic => Logistic
+    :logistic => Logistic,
+    :poisson => Poisson,
+    :gamma => Gamma,
+    :tweedie => Tweedie
 )
 
 mutable struct EvoLinearRegressor{T<:AbstractFloat,I<:Int,S<:Symbol}

@@ -12,10 +12,13 @@ coef = randn(T, nfeats)
 
 y = x * coef .+ rand(T, nobs) * T(0.1)
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2, updater=:all)
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 @time m = EvoLinear.fit(config; x, y, metric=:mse)
 m
 sum(m.coef .== 0)
+
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
+@btime m = EvoLinear.fit(config; x, y, metric=:mse)
 
 # EvoLinear.predict(m, x)
 @time m, cache = EvoLinear.init(config; x, y)
