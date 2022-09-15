@@ -33,7 +33,7 @@ end
         print_every_n=1,
         tol=1e-5)
 
-`Provided a `config`, EvoLinear.fit` takes `x` and `y` as features and target inputs, plus optionally `w` as weights and train a Linear boosted model.
+Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target inputs, plus optionally `w` as weights and train a Linear boosted model.
 
 # Arguments
 - `config::EvoLinearRegressor`: 
