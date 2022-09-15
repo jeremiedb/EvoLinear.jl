@@ -1,6 +1,25 @@
 # EvoLinear
 
-ML library implementing linear boosting along L1/L2 regularization.
+> ML library implementing linear boosting along L1/L2 regularization.
+
+# Linear and generalized linear models in Julia
+
+| Documentation | CI Status | Coverage
+|:-----------------:|:------------------:|:-----------------:|:----------:|
+| [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] | [![][codecov-img]][codecov-url] |
+
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-latest-url]: https://jeremiedb.github.io/EvoLinear.jl/dev
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://jeremiedb.github.io/EvoLinear.jl/stable
+
+[ci-img]: https://github.com/jeremiedb/EvoLinear.jl/workflows/CI/badge.svg
+[ci-url]: https://github.com/jeremiedb/EvoLinear.jl/actions?query=workflow%3ACI+branch%3Amain
+
+[codecov-img]: https://codecov.io/gh/jeremiedb/EvoLinear.jl/coverage.svg?branch=main
+[codecov-url]: https://codecov.io/gh/jeremiedb/EvoLinear.jl?branch=main
+
 
 Currently supports:    
 - mse (squared-error)
