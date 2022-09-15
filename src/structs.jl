@@ -29,11 +29,13 @@ end
 
 - `loss=:mse`: loss function to be minimised. 
     Can be one of:
-        - `:mse`
-        - `:logistic`
-        - `:poisson`
-        - `:gamma`
-        - `:tweedie`
+    
+    - `:mse`
+    - `:logistic`
+    - `:poisson`
+    - `:gamma`
+    - `:tweedie`
+
 - `nrounds=10`: maximum number of training rounds.
 - `L1=0`: Regularization penalty applied by shrinking to 0 weight update if update is < L1. No penalty if update > L1. Results in sparse feature selection. Typically in the `[0, 1]` range on normalized features.
 - `L2=0`: Regularization penalty applied to the squared of the weight update value. Restricts large parameter values. Typically in the `[0, 1]` range on normalized features.
