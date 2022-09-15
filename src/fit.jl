@@ -68,21 +68,21 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
         update_∇_bias!(L, ∇b, x, y, p, w)
         update_bias!(m, ∇b)
     elseif config.updater == :single
-        @warn "single update needs to be fixed - preds update needs linear projection basis"
+        @error "single update needs to be fixed - preds update needs linear projection basis"
         ####################################################
         # update bias following each feature update
         ####################################################
-        p = predict_proj(m, x)
-        for feat in axes(x, 2)
-            update_∇!(L, ∇¹, ∇², x, y, p, w, feat)
-            Δ_coef = coef_update(m, ∇¹, ∇², feat)
-            p .+= Δ_coef .* x[:, feat]
-            m.coef[feat] += Δ_coef
-        end
-        update_∇_bias!(L, ∇b, x, y, p, w)
-        update_bias!(m, ∇b)
+        # p = predict_proj(m, x)
+        # for feat in axes(x, 2)
+        #     update_∇!(L, ∇¹, ∇², x, y, p, w, feat)
+        #     Δ_coef = coef_update(m, ∇¹, ∇², feat)
+        #     p .+= Δ_coef .* x[:, feat]
+        #     m.coef[feat] += Δ_coef
+        # end
+        # update_∇_bias!(L, ∇b, x, y, p, w)
+        # update_bias!(m, ∇b)
     else
-        @warn "invalid updater"
+        @error "invalid updater"
     end
     return nothing
 end
@@ -91,15 +91,7 @@ function update_coef!(m, ∇¹, ∇², ∑w, L1, L2)
     update = -∇¹ ./ (∇² .+ L2 * ∑w)
     update[abs.(update).<L1] .= 0
     m.coef .+= update
-    # m.coef .+= -∇¹ ./ (∇² .+ L2 * ∑w)
     return nothing
-end
-function update_coef!(m, ∇¹, ∇², feat)
-    m.coef[feat] += -∇¹[feat] / ∇²[feat]
-    return nothing
-end
-function coef_update(m, ∇¹, ∇², feat)
-    -∇¹[feat] / ∇²[feat]
 end
 function update_bias!(m, ∇b)
     m.bias += -∇b[1] / ∇b[2]
