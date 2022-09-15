@@ -1,8 +1,6 @@
 # EvoLinear
 
-> ML library implementing linear boosting along L1/L2 regularization.
-
-# Linear and generalized linear models in Julia
+> ML library implementing linear boosting with L1/L2 regularization.
 
 | Documentation | CI Status | Coverage |
 |:------------------------:|:----------------:|:----------------:|
