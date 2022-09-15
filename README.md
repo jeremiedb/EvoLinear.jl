@@ -2,13 +2,12 @@
 
 ML library implementing linear boosting along L1/L2 regularization.
 
-Currently supports:
-    
-    - mse (squared-error)
-    - logistic (logloss) regression
-    - Poisson
-    - Gamma
-    - Tweedie
+Currently supports:    
+- mse (squared-error)
+- logistic (logloss) regression
+- Poisson
+- Gamma
+- Tweedie
 
 For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTrees.jl).
 
