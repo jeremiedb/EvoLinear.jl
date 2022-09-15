@@ -17,9 +17,8 @@
 [ci-img]: https://github.com/jeremiedb/EvoLinear.jl/workflows/CI/badge.svg
 [ci-url]: https://github.com/jeremiedb/EvoLinear.jl/actions?query=workflow%3ACI+branch%3Amain
 
-[codecov-img]: https://codecov.io/gh/jeremiedb/EvoLinear.jl/coverage.svg?branch=main
-[codecov-url]: https://codecov.io/gh/jeremiedb/EvoLinear.jl?branch=main
-
+[codecov-img]: https://codecov.io/github/jeremiedb/EvoLinear.jl/branch/main/graph/badge.svg
+[codecov-url]: https://codecov.io/github/jeremiedb/EvoLinear.jl?branch=main
 
 Supported loss functions:
 
