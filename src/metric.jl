@@ -37,7 +37,7 @@ Poisson deviance evaluation metric.
 function poisson(p, y)
 ϵ = eps(eltype(p)(1e-7))
 metric = zero(eltype(p))
-@tturbo for i in eachindex(y)
+@turbo for i in eachindex(y)
     metric += 2 * (y[i] * log(y[i] / p[i] + ϵ) + p[i] - y[i])
 end
 return metric
@@ -51,7 +51,7 @@ Gamma deviance evaluation metric.
 """
 function gamma(p, y)
 metric = zero(eltype(p))
-@tturbo for i in eachindex(y)
+@turbo for i in eachindex(y)
     metric += 2 * (log(p[i] / y[i]) + y[i] / p[i] - 1)
 end
 return metric
@@ -66,7 +66,7 @@ Tweedie deviance evaluation metric.
 function tweedie(p, y)
 rho = eltype(p)(1.5)
 metric = zero(eltype(p))
-@tturbo for i in eachindex(y)
+@turbo for i in eachindex(y)
     metric += 2 * (y[i]^(2 - rho) / (1 - rho) / (2 - rho) - y[i] * p[i]^(1 - rho) / (1 - rho) + p[i]^(2 - rho) / (2 - rho))
 end
 return metric

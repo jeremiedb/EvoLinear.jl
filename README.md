@@ -4,8 +4,8 @@
 
 # Linear and generalized linear models in Julia
 
-| Documentation | CI Status | Coverage
-|:-----------------:|:------------------:|:-----------------:|:----------:|
+| Documentation | CI Status | Coverage |
+|:-----------------:|:------------------:|:-----------------:|
 | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] | [![][codecov-img]][codecov-url] |
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
