@@ -7,7 +7,7 @@ For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTr
 <br>
 
 | Documentation | CI Status |
-|:------------------------:|:----------------:|:----------------:|
+|:------------------------:|:----------------:|
 | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] |
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
