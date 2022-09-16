@@ -82,11 +82,13 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
         # update all coefs then bias
         ####################################################
         p = predict_proj(m, x)
-        update_∇!(L, ∇¹, ∇², x, y, p, w)
-        update_coef!(m, ∇¹, ∇², ∑w, config.L1, config.L2)
-        p = predict_proj(m, x)
         update_∇_bias!(L, ∇b, x, y, p, w)
         update_bias!(m, ∇b)
+        
+        p = predict_proj(m, x)
+        update_∇!(L, ∇¹, ∇², x, y, p, w)
+        update_coef!(m, ∇¹, ∇², ∑w, config)
+
     elseif config.updater == :single
         @error "single update needs to be fixed - preds update needs linear projection basis"
         ####################################################
@@ -107,10 +109,10 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
     return nothing
 end
 
-function update_coef!(m, ∇¹, ∇², ∑w, L1, L2)
-    update = -∇¹ ./ (∇² .+ L2 * ∑w)
-    update[abs.(update).<L1] .= 0
-    m.coef .+= update
+function update_coef!(m, ∇¹, ∇², ∑w, config)
+    update = -∇¹ ./ (∇² .+ config.L2 * ∑w)
+    update[abs.(update).<config.L1] .= 0
+    m.coef .+= update .* config.eta
     return nothing
 end
 function update_bias!(m, ∇b)

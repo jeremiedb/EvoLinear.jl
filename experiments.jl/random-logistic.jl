@@ -11,7 +11,7 @@ coef = randn(T, nfeats)
 
 y = EvoLinear.sigmoid(x * coef .+ rand(T, nobs) * T(0.1))
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:logistic, L1=5e-2, L2=1e-2)
+config = EvoLinear.EvoLinearRegressor(nrounds=10, eta=1.0, loss=:logistic, L1=0e-2, L2=0e-2)
 @time m = EvoLinear.fit(config; x, y, metric=:logloss)
 sum(m.coef .== 0)
 
@@ -53,7 +53,7 @@ params_xgb = [
 nthread = Threads.nthreads()
 nthread = 8
 
-nrounds = 20
+nrounds = 10
 
 # metrics = ["rmse"]
 # metrics = ["mae"]
