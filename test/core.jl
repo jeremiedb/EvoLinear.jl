@@ -17,7 +17,7 @@
     m1, cache = EvoLinear.init(config; x, y)
     EvoLinear.fit!(m1, cache, config)
 
-    @test all(m0.coef .== m1.coef)
+    @test all(m0.coef .≈ m1.coef)
 
     p = EvoLinear.predict_proj(m0, x)
     metric_mse = EvoLinear.mse(p, y)
