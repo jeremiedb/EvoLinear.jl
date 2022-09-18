@@ -53,10 +53,7 @@ params_xgb = [
 nthread = Threads.nthreads()
 nthread = 8
 
-nrounds = 10
-
-# metrics = ["rmse"]
-# metrics = ["mae"]
+nrounds = 20
 metrics = ["logloss"]
 
 @info "xgboost train:"
