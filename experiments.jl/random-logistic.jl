@@ -35,6 +35,9 @@ p = m(x; proj=true)
 @btime EvoLinear.predict_proj($m, $x);
 @btime m($x; proj=true);
 
+@btime metric = EvoLinear.logloss(p, cache.y)
+@btime metric = EvoLinear.logloss(p, cache.y, cache.w)
+
 
 using XGBoost
 # xgboost aprams

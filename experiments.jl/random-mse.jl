@@ -25,9 +25,16 @@ config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
 @info m
+
 p = EvoLinear.predict_proj(m, x)
+
+@btime metric = EvoLinear.mse(p, cache.y)
+@btime metric = EvoLinear.mse(p, cache.y, cache.w)
+
 metric = EvoLinear.mse(p, y)
+
 metric = EvoLinear.mae(p, y)
+
 @info metric
 
 

@@ -5,7 +5,18 @@ mse(p, y)
 Mean squared error evaluation metric.
 """
 function mse(p, y)
-    return mean((p .- y) .^ 2)
+    metric = zero(eltype(p))
+    @turbo for i in eachindex(y)
+        metric += (y[i] - p[i])^2
+    end
+    return metric / length(p)
+end
+function mse(p, y, w)
+    metric = zero(eltype(p))
+    @turbo for i in eachindex(y)
+        metric += (y[i] - p[i])^2 * w[i]
+    end
+    return metric / sum(w)
 end
 
 """
@@ -14,7 +25,18 @@ mae(p, y)
 Mean absolute error evaluation metric.
 """
 function mae(p, y)
-    return mean(abs.(p .- y))
+    metric = zero(eltype(p))
+    @turbo for i in eachindex(y)
+        metric += abs(y[i] - p[i])
+    end
+    return metric / length(p)
+end
+function mae(p, y, w)
+    metric = zero(eltype(p))
+    @turbo for i in eachindex(y)
+        metric += abs(y[i] - p[i]) * w[i]
+    end
+    return metric / sum(w)
 end
 
 """
@@ -25,16 +47,28 @@ ylog(p) + (1-y)log(1-p)
 """
 function logloss(p, y)
     ϵ = eps(eltype(y)(1e-7))
-    return -mean(y .* log.(p .+ ϵ) .+ (1 .- y) .* log.(1 .- p .+ ϵ))
+    metric = zero(eltype(p))
+    @turbo for i in eachindex(y)
+        metric += -(y[i] * log(p[i] + ϵ) + (1 - y[i]) * log(1 - p[i] + ϵ))
+    end
+    return metric / length(p)
+end
+function logloss(p, y, w)
+    ϵ = eps(eltype(y)(1e-7))
+    metric = zero(eltype(p))
+    @turbo for i in eachindex(y)
+        metric += -(y[i] * log(p[i] + ϵ) + (1 - y[i]) * log(1 - p[i] + ϵ)) * w[i]
+    end
+    return metric / sum(w)
 end
 
 """
-poisson(p, y)
+poisson_deviance(p, y)
 
 Poisson deviance evaluation metric.
 𝐷 = 2 * (y * log(y/p) + p - y)
 """
-function poisson(p, y)
+function poisson_deviance(p, y)
     ϵ = eps(eltype(p)(1e-7))
     metric = zero(eltype(p))
     @turbo for i in eachindex(y)
@@ -42,7 +76,7 @@ function poisson(p, y)
     end
     return metric / length(p)
 end
-function poisson(p, y, w)
+function poisson_deviance(p, y, w)
     ϵ = eps(eltype(p)(1e-7))
     metric = zero(eltype(p))
     @turbo for i in eachindex(y)
@@ -52,19 +86,19 @@ function poisson(p, y, w)
 end
 
 """
-gamma(p, y)
+gamma_deviance(p, y)
 
 Gamma deviance evaluation metric.
 𝐷 = 2 * (log(μ/y) + y/μ - 1)
 """
-function gamma(p, y)
+function gamma_deviance(p, y)
     metric = zero(eltype(p))
     @turbo for i in eachindex(y)
         metric += 2 * (log(p[i] / y[i]) + y[i] / p[i] - 1)
     end
     return metric / length(p)
 end
-function gamma(p, y, w)
+function gamma_deviance(p, y, w)
     metric = zero(eltype(p))
     @turbo for i in eachindex(y)
         metric += 2 * (log(p[i] / y[i]) + y[i] / p[i] - 1) * w[i]
@@ -73,12 +107,12 @@ function gamma(p, y, w)
 end
 
 """
-tweedie(p, y)
+tweedie_deviance(p, y)
 
-Tweedie deviance evaluation metric.
+Tweedie deviance evaluation metric. Fixed rho (ρ) of 1.5.
 𝐷 = 2 * (y²⁻ʳʰᵒ/(1-rho)(2-rho) - yμ¹⁻ʳʰᵒ/(1-rho) + μ²⁻ʳʰᵒ/(2-rho))
 """
-function tweedie(p, y)
+function tweedie_deviance(p, y)
     rho = eltype(p)(1.5)
     metric = zero(eltype(p))
     @turbo for i in eachindex(y)
@@ -86,7 +120,7 @@ function tweedie(p, y)
     end
     return metric / length(p)
 end
-function tweedie(p, y, w)
+function tweedie_deviance(p, y, w)
     rho = eltype(p)(1.5)
     metric = zero(eltype(p))
     @turbo for i in eachindex(y)
@@ -99,7 +133,7 @@ const metric_dict = Dict(
     :mse => mse,
     :mae => mae,
     :logloss => logloss,
-    :poisson => poisson,
-    :gamma => gamma,
-    :tweedie => tweedie
+    :poisson_deviance => poisson_deviance,
+    :gamma_deviance => gamma_deviance,
+    :tweedie_deviance => tweedie_deviance
 )

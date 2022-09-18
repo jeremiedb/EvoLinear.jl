@@ -125,4 +125,3 @@ function update_bias!(m, ∇b)
     m.bias += -∇b[1] / ∇b[2]
     return nothing
 end
-
