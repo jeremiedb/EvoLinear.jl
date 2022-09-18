@@ -1,8 +1,15 @@
 
 """
 mse(p, y)
+mse(p, y, w)
 
 Mean squared error evaluation metric.
+
+# Arguments
+
+- `p`: predicted value.
+- `y`: observed target variable.
+- `w`: vector of weights.
 """
 function mse(p, y)
     metric = zero(eltype(p))
@@ -20,9 +27,16 @@ function mse(p, y, w)
 end
 
 """
-mae(p, y)
+    mae(p, y)
+    mae(p, y, w)
 
 Mean absolute error evaluation metric.
+
+# Arguments
+
+- `p`: predicted value.
+- `y`: observed target variable.
+- `w`: vector of weights.
 """
 function mae(p, y)
     metric = zero(eltype(p))
@@ -40,10 +54,17 @@ function mae(p, y, w)
 end
 
 """
-logloss(p, y)
+    logloss(p, y)
+    logloss(p, y, w)
 
 Logloss evaluation metric.
 ylog(p) + (1-y)log(1-p)
+
+# Arguments
+
+- `p`: predicted value. Assumes that p is on a projected basis (ie. in the `[0-1]` range).
+- `y`: observed target variable.
+- `w`: vector of weights.
 """
 function logloss(p, y)
     ϵ = eps(eltype(y)(1e-7))
@@ -63,10 +84,17 @@ function logloss(p, y, w)
 end
 
 """
-poisson_deviance(p, y)
+    poisson_deviance(p, y)
+    poisson_deviance(p, y, w)
 
 Poisson deviance evaluation metric.
-𝐷 = 2 * (y * log(y/p) + p - y)
+`𝐷 = 2 * (y * log(y/p) + p - y)`
+
+# Arguments
+
+- `p`: predicted value. Assumes that p is on a projected basis (ie. in the `[0-Inf]` range).
+- `y`: observed target variable.
+- `w`: vector of weights.
 """
 function poisson_deviance(p, y)
     ϵ = eps(eltype(p)(1e-7))
@@ -86,10 +114,17 @@ function poisson_deviance(p, y, w)
 end
 
 """
-gamma_deviance(p, y)
+    gamma_deviance(p, y)
+    gamma_deviance(p, y, w)
 
 Gamma deviance evaluation metric.
-𝐷 = 2 * (log(μ/y) + y/μ - 1)
+`𝐷 = 2 * (log(μ/y) + y/μ - 1)`
+
+# Arguments
+
+- `p`: predicted value. Assumes that p is on a projected basis (ie. in the `[0-Inf]` range).
+- `y`: observed target variable.
+- `w`: vector of weights.
 """
 function gamma_deviance(p, y)
     metric = zero(eltype(p))
@@ -107,10 +142,17 @@ function gamma_deviance(p, y, w)
 end
 
 """
-tweedie_deviance(p, y)
+    tweedie_deviance(p, y)
+    tweedie_deviance(p, y, w)
 
 Tweedie deviance evaluation metric. Fixed rho (ρ) of 1.5.
 𝐷 = 2 * (y²⁻ʳʰᵒ/(1-rho)(2-rho) - yμ¹⁻ʳʰᵒ/(1-rho) + μ²⁻ʳʰᵒ/(2-rho))
+
+# Arguments
+
+- `p`: predicted value. Assumes that p is on a projected basis (ie. in the `[0-Inf]` range).
+- `y`: observed target variable.
+- `w`: vector of weights.
 """
 function tweedie_deviance(p, y)
     rho = eltype(p)(1.5)

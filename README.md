@@ -37,7 +37,8 @@ Build a configuration struct with `EvoLinearRegressor`. Then `EvoLinear.fit` tak
 
 ```julia
 using EvoLinear
-config = EvoLinearRegressor(loss=:mse, L1=1e-1, L2=1e-2, nrounds=10)
+config = EvoLinearRegressor(loss=:mse, nrounds=10, L1=1e-1, L2=1e-2)
 m = EvoLinear.fit(config; x, y, metric=:mse)
 p = EvoLinear.predict_proj(m, x)
+p = m(x)
 ```
