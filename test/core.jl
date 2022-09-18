@@ -17,6 +17,10 @@
     m1, cache = EvoLinear.init(config; x, y)
     EvoLinear.fit!(m1, cache, config)
 
+    coef_diff = m0.coef .- m1.coef
+    @info maximum(coef_diff)
+    @info minimum(coef_diff)
+    
     @test all(m0.coef .≈ m1.coef)
 
     p = EvoLinear.predict_proj(m0, x)
