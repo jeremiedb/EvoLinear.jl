@@ -1,7 +1,7 @@
 
 """
-mse(p, y)
-mse(p, y, w)
+    mse(p, y)
+    mse(p, y, w)
 
 Mean squared error evaluation metric.
 
