@@ -63,7 +63,41 @@ function EvoLinearRegressor(;
     return model
 end
 
-mutable struct EvoLinearModel{L<:Loss}
-    coef
-    bias
+mutable struct EvoLinearModel{L<:Loss, C<:AbstractVector, B}
+    coef::C
+    bias::B
+end
+function EvoLinearModel(; loss, coef, bias)
+    EvoLinearModel{loss, typeof(coef), eltype(coef)}(coef, bias)
+end
+
+function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
+    p = x * m.coef .+ m.bias
+    proj ? proj!(L, p) : nothing
+    return p
+end
+
+function proj!(::L, p) where {L<:Type{MSE}}
+    return nothing
+end
+function proj!(::L, p) where {L<:Type{Logistic}}
+    p .= sigmoid.(p)
+    return nothing
+end
+function proj!(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
+    p .= exp.(p)
+    return nothing
+end
+
+function proj(::L, p) where {L<:Type{MSE}}
+    p_proj = identity(x)
+    return p_proj
+end
+function proj(::L, p) where {L<:Type{Logistic}}
+    p = sigmoid.(p)
+    return p_proj
+end
+function proj(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
+    p = exp.(p)
+    return p_proj
 end

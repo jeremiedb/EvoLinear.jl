@@ -13,6 +13,11 @@ function predict_linear(m::EvoLinearModel, x)
     return p
 end
 
+function predict_linear!(p, m::EvoLinearModel, x)
+    p .= x * m.coef .+ m.bias
+    return nothing
+end
+
 """
     predict_proj(m, x)
 
