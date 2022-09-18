@@ -31,17 +31,15 @@ params_xgb = [
     "booster" => "gblinear",
     "updater" => "shotgun", # shotgun / coord_descent
     "eta" => 1.0,
-    "objective" => "reg:logistic",
+    "objective" => "reg:tweedie",
     "print_every_n" => 5]
 
 nthread = Threads.nthreads()
 nthread = 8
 
 nrounds = 20
-
-# metrics = ["rmse"]
-# metrics = ["mae"]
-metrics = ["logloss"]
+metrics = ["gamma-deviance"]
+metrics = ["tweedie-nloglik@1.5"]
 
 @info "xgboost train:"
 @time m_xgb = xgboost(x, nrounds, label=y, param=params_xgb, metrics=metrics, nthread=nthread, silent=0);

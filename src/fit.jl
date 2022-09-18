@@ -3,7 +3,7 @@ function init(config::EvoLinearRegressor;
 
     T = Float32
     loss = loss_types[config.loss]
-    m = EvoLinearModel{loss}(zeros(T, size(x, 2)), zero(T))
+    m = EvoLinearModel(; loss, coef=zeros(T, size(x, 2)), bias=zero(T))
     p_linear = predict_linear(m, x)
     p_proj = predict_proj(m, x)
 
@@ -29,7 +29,7 @@ end
     fit(config::EvoLinearRegressor;
         x, y, w=nothing,
         x_eval=nothing, y_eval=nothing, w_eval=nothing,
-        metric=:mse,
+        metric=:none,
         print_every_n=1,
         tol=1e-5)
 
@@ -42,7 +42,13 @@ Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target in
 - `x::AbstractMatrix`: Features matrix. Dimensions are `[nobs, num_features]`.
 - `y::AbstractVector`: Vector of observed targets.
 - `w=nothing`: Vector of weights. Can be be either a `Vector` or `nothing`. If `nothing`, assumes a vector of 1s. 
-- `metric=:mse`: Evaluation metric to be tracked through each iteration.
+- `metric=:none`: Evaluation metric to be tracked through each iteration. Can be one of:
+
+    - `:mse`
+    - `:logistic`
+    - `:poisson_deviance`
+    - `:gamma_deviance`
+    - `:tweedie_deviance`
 """
 function fit(config::EvoLinearRegressor;
     x, y, w=nothing,
@@ -54,7 +60,7 @@ function fit(config::EvoLinearRegressor;
     m, cache = init(config::EvoLinearRegressor; x, y, w)
 
     metric_f = metric_dict[metric]
-    p = predict_proj(m, x)
+    p = m(x, proj=true)
     tracker = metric_f(p, y)
     @info "initial $metric:" tracker
 
@@ -62,7 +68,7 @@ function fit(config::EvoLinearRegressor;
         fit!(m, cache, config)
 
         if i % print_every_n == 0
-            p = predict_proj(m, x)
+            p = m(x; proj=true)
             tracker = metric_f(p, y)
             @info "$metric iter $i:" tracker
         end
@@ -81,12 +87,14 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
         ####################################################
         # update all coefs then bias
         ####################################################
-        p = predict_proj(m, x)
-        update_∇!(L, ∇¹, ∇², x, y, p, w)
-        update_coef!(m, ∇¹, ∇², ∑w, config.L1, config.L2)
-        p = predict_proj(m, x)
+        p = m(x; proj=true)
         update_∇_bias!(L, ∇b, x, y, p, w)
         update_bias!(m, ∇b)
+
+        p = m(x; proj=true)
+        update_∇!(L, ∇¹, ∇², x, y, p, w)
+        update_coef!(m, ∇¹, ∇², ∑w, config)
+
     elseif config.updater == :single
         @error "single update needs to be fixed - preds update needs linear projection basis"
         ####################################################
@@ -107,14 +115,13 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
     return nothing
 end
 
-function update_coef!(m, ∇¹, ∇², ∑w, L1, L2)
-    update = -∇¹ ./ (∇² .+ L2 * ∑w)
-    update[abs.(update).<L1] .= 0
-    m.coef .+= update
+function update_coef!(m, ∇¹, ∇², ∑w, config)
+    update = -∇¹ ./ (∇² .+ config.L2 * ∑w)
+    update[abs.(update).<config.L1] .= 0
+    m.coef .+= update .* config.eta
     return nothing
 end
 function update_bias!(m, ∇b)
     m.bias += -∇b[1] / ∇b[2]
     return nothing
 end
-

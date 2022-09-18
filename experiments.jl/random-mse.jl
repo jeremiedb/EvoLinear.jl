@@ -7,28 +7,32 @@ nfeats = 100
 T = Float32
 
 x = randn(T, nobs, nfeats)
-# x = randn(T, nobs, nfeats) .+ 5 .* rand(T, nobs, nfeats)
 coef = randn(T, nfeats)
 
 y = x * coef .+ rand(T, nobs) * T(0.1)
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
-@time m = EvoLinear.fit(config; x, y, metric=:mse)
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=0e-1, L2=0e-2)
+@time m = EvoLinear.fit(config; x, y, metric=:mae)
 m
 sum(m.coef .== 0)
 
 config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 @btime m = EvoLinear.fit(config; x, y, metric=:mse)
 
-# EvoLinear.predict(m, x)
-@time m, cache = EvoLinear.init(config; x, y)
-@time EvoLinear.fit!(m, cache, config);
+@time m0, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m0, cache, config);
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
-@info m
+
 p = EvoLinear.predict_proj(m, x)
+
+@btime metric = EvoLinear.mse(p, cache.y)
+@btime metric = EvoLinear.mse(p, cache.y, cache.w)
+
 metric = EvoLinear.mse(p, y)
+
 metric = EvoLinear.mae(p, y)
+
 @info metric
 
 
@@ -42,7 +46,7 @@ params_xgb = [
     "print_every_n" => 5]
 
 nthread = Threads.nthreads()
-nrounds = 20
+nrounds = 10
 
 # metrics = ["rmse"]
 metrics = ["mae"]

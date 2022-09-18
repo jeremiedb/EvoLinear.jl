@@ -38,9 +38,9 @@ end
 ###################################
 function update_∇!(::Type{MSE}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
-    @inbounds for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (p[i] - y[i]) * x[i, feat]
-        ∇2 += 2 * w[i] * x[i, feat]^2
+    @turbo for i in axes(x, 1)
+        ∇1 += 2 * (p[i] - y[i]) * x[i, feat] * w[i]
+        ∇2 += 2 * x[i, feat]^2 * w[i]
     end
     ∇¹[feat] = ∇1
     ∇²[feat] = ∇2
@@ -48,8 +48,8 @@ function update_∇!(::Type{MSE}, ∇¹, ∇², x, y, p, w, feat)
 end
 function update_∇_bias!(::Type{MSE}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
-    @inbounds for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (p[i] - y[i])
+    @turbo for i in axes(x, 1)
+        ∇1 += 2 * (p[i] - y[i]) * w[i]
         ∇2 += 2 * w[i]
     end
     ∇_bias[1] = ∇1
@@ -63,8 +63,8 @@ end
 function update_∇!(::Type{Logistic}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += w[i] * (p[i] - y[i]) * x[i, feat]
-        ∇2 += w[i] * p[i] * (1 - p[i]) * x[i, feat]^2
+        ∇1 += (p[i] - y[i]) * x[i, feat] * w[i]
+        ∇2 += p[i] * (1 - p[i]) * x[i, feat]^2 * w[i]
     end
     ∇¹[feat] = ∇1
     ∇²[feat] = ∇2
@@ -73,8 +73,8 @@ end
 function update_∇_bias!(::Type{Logistic}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += w[i] * (p[i] - y[i])
-        ∇2 += w[i] * p[i] * (1 - p[i])
+        ∇1 += (p[i] - y[i]) * w[i]
+        ∇2 += p[i] * (1 - p[i]) * w[i]
     end
     ∇_bias[1] = ∇1
     ∇_bias[2] = ∇2
@@ -91,8 +91,8 @@ end
 function update_∇!(::Type{Poisson}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (p[i] - y[i]) * x[i, feat]
-        ∇2 += 2 * w[i] * p[i] * x[i, feat]^2
+        ∇1 += 2 * (p[i] - y[i]) * x[i, feat] * w[i]
+        ∇2 += 2 * p[i] * x[i, feat]^2 * w[i]
     end
     ∇¹[feat] = ∇1
     ∇²[feat] = ∇2
@@ -101,8 +101,8 @@ end
 function update_∇_bias!(::Type{Poisson}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (p[i] - y[i])
-        ∇2 += 2 * w[i] * p[i]
+        ∇1 += 2 * (p[i] - y[i]) * w[i]
+        ∇2 += 2 * p[i] * w[i]
     end
     ∇_bias[1] = ∇1
     ∇_bias[2] = ∇2
@@ -119,8 +119,8 @@ end
 function update_∇!(::Type{Gamma}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (1 - y[i] / p[i]) * x[i, feat]
-        ∇2 += 2 * w[i] * y[i] / p[i] * x[i, feat]^2
+        ∇1 += 2 * (1 - y[i] / p[i]) * x[i, feat] * w[i]
+        ∇2 += 2 * y[i] / p[i] * x[i, feat]^2 * w[i]
     end
     ∇¹[feat] = ∇1
     ∇²[feat] = ∇2
@@ -129,8 +129,8 @@ end
 function update_∇_bias!(::Type{Gamma}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (1 - y[i] / p[i])
-        ∇2 += 2 * w[i] * y[i] / p[i]
+        ∇1 += 2 * (1 - y[i] / p[i]) * w[i]
+        ∇2 += 2 * y[i] / p[i] * w[i]
     end
     ∇_bias[1] = ∇1
     ∇_bias[2] = ∇2
@@ -148,8 +148,8 @@ function update_∇!(::Type{Tweedie}, ∇¹, ∇², x, y, p, w, feat)
     rho = eltype(p)(1.5)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (p[i]^(2 - rho) - y[i] * p[i]^(1 - rho)) * x[i, feat]
-        ∇2 += 2 * w[i] * ((2 - rho) * p[i]^(2 - rho) - (1 - rho) * y[i] * p[i]^(1 - rho)) * x[i, feat]^2
+        ∇1 += 2 * (p[i]^(2 - rho) - y[i] * p[i]^(1 - rho)) * x[i, feat] * w[i]
+        ∇2 += 2 * ((2 - rho) * p[i]^(2 - rho) - (1 - rho) * y[i] * p[i]^(1 - rho)) * x[i, feat]^2 * w[i]
     end
     ∇¹[feat] = ∇1
     ∇²[feat] = ∇2
@@ -159,8 +159,8 @@ function update_∇_bias!(::Type{Tweedie}, ∇_bias, x, y, p, w)
     rho = eltype(p)(1.5)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
-        ∇1 += 2 * w[i] * (p[i]^(2 - rho) - y[i] * p[i]^(1 - rho))
-        ∇2 += 2 * w[i] * ((2 - rho) * p[i]^(2 - rho) - (1 - rho) * y[i] * p[i]^(1 - rho))
+        ∇1 += 2 * (p[i]^(2 - rho) - y[i] * p[i]^(1 - rho)) * w[i]
+        ∇2 += 2 * ((2 - rho) * p[i]^(2 - rho) - (1 - rho) * y[i] * p[i]^(1 - rho)) * w[i]
     end
     ∇_bias[1] = ∇1
     ∇_bias[2] = ∇2

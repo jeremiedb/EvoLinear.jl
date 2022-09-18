@@ -11,34 +11,31 @@ coef = randn(T, nfeats)
 
 y = EvoLinear.sigmoid(x * coef .+ rand(T, nobs) * T(0.1))
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:logistic, L1=5e-2, L2=1e-2)
+config = EvoLinear.EvoLinearRegressor(nrounds=10, eta=1.0, loss=:logistic, L1=0e-2, L2=0e-2)
 @time m = EvoLinear.fit(config; x, y, metric=:logloss)
 sum(m.coef .== 0)
 
 config = EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-2, L2=1e-1)
 @btime m = EvoLinear.fit(config; x, y, metric=:logloss);
 
-# EvoLinear.predict(m, x)
-@time m, cache = EvoLinear.init(config; x, y)
-@time EvoLinear.fit!(m, cache, config);
-# @code_warntype EvoLinear.fit!(m, cache, config; x, y)
+@time m0, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m0, cache, config);
+@code_warntype EvoLinear.fit!(m0, cache, config)
 # all: 139.865 ms (522 allocations: 782.04 MiB)
 # single: 597.298 ms (1213 allocations: 1.13 GiB)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
 # @info m
 p = EvoLinear.predict_proj(m, x)
+p = m(x; proj=true)
 
-# 12.310 ms (6 allocations: 7.63 MiB)
-# @btime p1 = EvoLinear.predict_linear($m, $x);
+@code_warntype EvoLinear.predict_proj(m, x)
+@code_warntype m(x; proj=true)
 
-# 885.100 μs (2 allocations: 3.81 MiB)
-# @btime p1 = EvoLinear.sigmoid($p);
+@btime EvoLinear.predict_proj($m, $x);
+@btime m($x; proj=true);
 
-y_logit = EvoLinear.logit(y)
-metric = EvoLinear.mse(p, y)
-metric = EvoLinear.mae(p, y)
-metric = EvoLinear.logloss(p, y)
-@info metric
+@btime metric = EvoLinear.logloss(p, cache.y)
+@btime metric = EvoLinear.logloss(p, cache.y, cache.w)
 
 
 using XGBoost
@@ -54,9 +51,6 @@ nthread = Threads.nthreads()
 nthread = 8
 
 nrounds = 20
-
-# metrics = ["rmse"]
-# metrics = ["mae"]
 metrics = ["logloss"]
 
 @info "xgboost train:"

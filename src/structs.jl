@@ -17,9 +17,9 @@ mutable struct EvoLinearRegressor{T<:AbstractFloat,I<:Int,S<:Symbol}
     loss::S
     updater::S
     nrounds::I
+    eta::T
     L1::T
     L2::T
-    metric::S
     rng
     device::S
 end
@@ -37,9 +37,9 @@ end
     - `:tweedie`
 
 - `nrounds=10`: maximum number of training rounds.
+- `eta=1`: Learning rate. Typically in the range `[1e-2, 1]`.
 - `L1=0`: Regularization penalty applied by shrinking to 0 weight update if update is < L1. No penalty if update > L1. Results in sparse feature selection. Typically in the `[0, 1]` range on normalized features.
 - `L2=0`: Regularization penalty applied to the squared of the weight update value. Restricts large parameter values. Typically in the `[0, 1]` range on normalized features.
-- `metric=:mse`: evaluation metric to be tracked. Not used at the moment, use `:metric` in fit[@ref] instead.
 - `rng=123`: random seed. Not used at the moment.
 - `updater=:all`: training method. Only `:all` is supported at the moment. Gradients for each feature are computed simultaneously, then bias is updated based on all features update. 
 - `device=:cpu`: Only `:cpu` is supported at the moment.
@@ -49,21 +49,55 @@ function EvoLinearRegressor(;
     loss=:mse,
     updater=:all,
     nrounds=10,
-    L1=0.0, #
-    L2=0.0, #
-    metric=:mse,
+    eta=1,
+    L1=0, #
+    L2=0, #
     rng=123,
     device=:cpu)
 
     T = Float32
     # rng = mk_rng(rng)::Random.AbstractRNG
 
-    model = EvoLinearRegressor(loss, updater, nrounds, T(L1), T(L2), metric, rng, device)
+    model = EvoLinearRegressor(loss, updater, nrounds, T(eta), T(L1), T(L2), rng, device)
 
     return model
 end
 
-mutable struct EvoLinearModel{L<:Loss}
-    coef
-    bias
+mutable struct EvoLinearModel{L<:Loss, C<:AbstractVector, B}
+    coef::C
+    bias::B
+end
+function EvoLinearModel(; loss, coef, bias)
+    EvoLinearModel{loss, typeof(coef), eltype(coef)}(coef, bias)
+end
+
+function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
+    p = x * m.coef .+ m.bias
+    proj ? proj!(L, p) : nothing
+    return p
+end
+
+function proj!(::L, p) where {L<:Type{MSE}}
+    return nothing
+end
+function proj!(::L, p) where {L<:Type{Logistic}}
+    p .= sigmoid.(p)
+    return nothing
+end
+function proj!(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
+    p .= exp.(p)
+    return nothing
+end
+
+function proj(::L, p) where {L<:Type{MSE}}
+    p_proj = identity(x)
+    return p_proj
+end
+function proj(::L, p) where {L<:Type{Logistic}}
+    p = sigmoid.(p)
+    return p_proj
+end
+function proj(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
+    p = exp.(p)
+    return p_proj
 end
