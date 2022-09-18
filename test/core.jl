@@ -11,15 +11,15 @@
 
     y = x * coef .+ rand(T, nobs) * T(0.1)
 
-    config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-3)
+    config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=0, L2=1e-3)
     m0 = EvoLinear.fit(config; x, y, metric=:mse)
 
     m1, cache = EvoLinear.init(config; x, y)
     EvoLinear.fit!(m1, cache, config)
 
     coef_diff = m0.coef .- m1.coef
-    @info maximum(coef_diff)
-    @info minimum(coef_diff)
+    @info "max coef diff" maximum(coef_diff)
+    @info "min coef diff" minimum(coef_diff)
     
     @test all(m0.coef .≈ m1.coef)
 
