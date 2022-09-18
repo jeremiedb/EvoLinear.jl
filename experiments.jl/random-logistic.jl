@@ -18,10 +18,9 @@ sum(m.coef .== 0)
 config = EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-2, L2=1e-1)
 @btime m = EvoLinear.fit(config; x, y, metric=:logloss);
 
-# EvoLinear.predict(m, x)
-@time m, cache = EvoLinear.init(config; x, y)
-@time EvoLinear.fit!(m, cache, config);
-@code_warntype EvoLinear.fit!(m, cache, config)
+@time m0, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m0, cache, config);
+@code_warntype EvoLinear.fit!(m0, cache, config)
 # all: 139.865 ms (522 allocations: 782.04 MiB)
 # single: 597.298 ms (1213 allocations: 1.13 GiB)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)

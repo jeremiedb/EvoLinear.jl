@@ -19,12 +19,10 @@ sum(m.coef .== 0)
 config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 @btime m = EvoLinear.fit(config; x, y, metric=:mse)
 
-# EvoLinear.predict(m, x)
-@time m, cache = EvoLinear.init(config; x, y)
-@time EvoLinear.fit!(m, cache, config);
+@time m0, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m0, cache, config);
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
-@info m
 
 p = EvoLinear.predict_proj(m, x)
 
