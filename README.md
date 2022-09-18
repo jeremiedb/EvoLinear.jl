@@ -29,13 +29,13 @@ Supported loss functions:
 
 From General Registry
 
-```julia
+```
 pkg> add EvoLinear
 ```
 
 For latest version
 
-```julia
+```
 pkg> add https://github.com/jeremiedb/EvoLinear.jl
 ```
 
