@@ -17,7 +17,7 @@
 [cov-url]: https://app.codecov.io/github/jeremiedb/evolinear.jl
 
 ML library implementing linear boosting with L1 and L2 regularization.
-For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTrees.jl).
+For tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTrees.jl).
 
 Supported loss functions:
 
