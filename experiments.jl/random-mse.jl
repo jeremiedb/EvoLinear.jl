@@ -11,7 +11,7 @@ coef = randn(T, nfeats)
 
 y = x * coef .+ rand(T, nobs) * T(0.1)
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=0e-1, L2=0e-2)
+config = EvoLinear.EvoLinearRegressor(nrounds=100, loss=:mse, L1=0e-1, L2=10)
 @time m = EvoLinear.fit(config; x, y, metric=:mae)
 m
 sum(m.coef .== 0)
@@ -42,11 +42,12 @@ params_xgb = [
     "booster" => "gblinear",
     "updater" => "shotgun", # shotgun / coord_descent
     "eta" => 1.0,
+    "lambda" => 0.0,
     "objective" => "reg:squarederror",
     "print_every_n" => 5]
 
 nthread = Threads.nthreads()
-nrounds = 10
+nrounds = 20
 
 # metrics = ["rmse"]
 metrics = ["mae"]

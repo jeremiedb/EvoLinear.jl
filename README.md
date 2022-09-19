@@ -1,8 +1,8 @@
 # EvoLinear
 
-| Documentation | CI Status |
-|:------------------------:|:----------------:|
-| [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] |
+| Documentation | CI Status | Coverage |
+|:------------------------:|:----------------:|:----------------:|
+| [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][ci-img]][ci-url] | [![][cov-img]][cov-url] |
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://jeremiedb.github.io/EvoLinear.jl/dev
@@ -13,6 +13,8 @@
 [ci-img]: https://github.com/jeremiedb/EvoLinear.jl/workflows/CI/badge.svg
 [ci-url]: https://github.com/jeremiedb/EvoLinear.jl/actions?query=workflow%3ACI+branch%3Amain
 
+[cov-img]: https://codecov.io/github/jeremiedb/evolinear.jl/branch/main/graph/badge.svg
+[cov-url]: https://app.codecov.io/github/jeremiedb/evolinear.jl
 
 ML library implementing linear boosting with L1 and L2 regularization.
 For Tree based boosting, consider [EvoTrees.jl](https://github.com/Evovest/EvoTrees.jl).

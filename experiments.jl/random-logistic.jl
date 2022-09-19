@@ -44,6 +44,7 @@ params_xgb = [
     "booster" => "gblinear",
     "updater" => "shotgun", # shotgun / coord_descent
     "eta" => 1.0,
+    "lambda" => 0.0,
     "objective" => "reg:logistic",
     "print_every_n" => 5]
 
