@@ -11,30 +11,29 @@ coef = randn(T, nfeats)
 
 y = x * coef .+ rand(T, nobs) * T(0.1)
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=0e-1, L2=0e-2)
-@time m = EvoLinear.fit(config; x, y, metric=:mae)
-m
+config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=0e-1, L2=1)
+@time m = EvoLinear.fit(config; x, y, metric=:mae);
 sum(m.coef .== 0)
 
 config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
-@btime m = EvoLinear.fit(config; x, y, metric=:mse)
+@btime m = EvoLinear.fit(config; x, y, metric=:mse);
 
 @time m0, cache = EvoLinear.init(config; x, y)
 @time EvoLinear.fit!(m0, cache, config);
-# @code_warntype EvoLinear.fit!(m, cache, config; x, y)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
+@code_warntype EvoLinear.fit!(m0, cache, config)
+cache[:logger][:nrounds]
 
 p = EvoLinear.predict_proj(m, x)
+@btime m($x);
 
 @btime metric = EvoLinear.mse(p, cache.y)
 @btime metric = EvoLinear.mse(p, cache.y, cache.w)
 
 metric = EvoLinear.mse(p, y)
-
 metric = EvoLinear.mae(p, y)
 
 @info metric
-
 
 using XGBoost
 # xgboost aprams
@@ -42,6 +41,7 @@ params_xgb = [
     "booster" => "gblinear",
     "updater" => "shotgun", # shotgun / coord_descent
     "eta" => 1.0,
+    "lambda" => 0.0,
     "objective" => "reg:squarederror",
     "print_every_n" => 5]
 

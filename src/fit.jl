@@ -1,26 +1,30 @@
-function init(config::EvoLinearRegressor;
-    x, y, w=nothing)
+function init(config::EvoLinearRegressor{T};
+    x, y, w=nothing) where {T}
 
-    T = Float32
-    loss = loss_types[config.loss]
-    m = EvoLinearModel(; loss, coef=zeros(T, size(x, 2)), bias=zero(T))
-    p_linear = predict_linear(m, x)
-    p_proj = predict_proj(m, x)
+    cache = init_cache(config; x, y, w)
+    m = EvoLinearModel(config.loss; coef=zeros(T, size(x, 2)), bias=zero(T))
 
-    ∇¹ = init_∇¹(x)
-    ∇² = init_∇²(x)
+    return m, cache
+
+end
+
+
+function init_cache(::EvoLinearRegressor{T};
+    x, y, w=nothing) where {T}
+
+    ∇¹, ∇² = zeros(T, size(x, 2)), zeros(T, size(x, 2))
     ∇b = zeros(T, 2)
 
-    isnothing(w) ? w = ones(T, size(x, 1)) : nothing
+    isnothing(w) ? w = ones(T, size(x, 1)) : convert(Vector{T}, w)
     ∑w = sum(w)
 
     cache = (
-        p_linear=p_linear, p_proj=p_proj,
         ∇¹=∇¹, ∇²=∇², ∇b=∇b,
-        x=x, y=y, w=w,
-        ∑w=∑w
+        x=convert(Matrix{T}, x), y=convert(Vector{T}, y), w=w,
+        ∑w=∑w,
+        logger=Dict(:nrounds => 0)
     )
-    return m, cache
+    return cache
 
 end
 
@@ -42,7 +46,7 @@ Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target in
 - `x::AbstractMatrix`: Features matrix. Dimensions are `[nobs, num_features]`.
 - `y::AbstractVector`: Vector of observed targets.
 - `w=nothing`: Vector of weights. Can be be either a `Vector` or `nothing`. If `nothing`, assumes a vector of 1s. 
-- `metric=:none`: Evaluation metric to be tracked through each iteration. Can be one of:
+- `metric=nothing`: Evaluation metric to be tracked through each iteration. Default to `nothing`. Can be one of:
 
     - `:mse`
     - `:logistic`
@@ -53,21 +57,23 @@ Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target in
 function fit(config::EvoLinearRegressor;
     x, y, w=nothing,
     x_eval=nothing, y_eval=nothing, w_eval=nothing,
-    metric=:mse,
+    metric=nothing,
     print_every_n=1,
     tol=1e-5)
 
     m, cache = init(config::EvoLinearRegressor; x, y, w)
 
-    metric_f = metric_dict[metric]
-    p = m(x, proj=true)
-    tracker = metric_f(p, y)
-    @info "initial $metric:" tracker
+    if !isnothing(metric)
+        metric_f = metric_dict[metric]
+        p = m(x, proj=true)
+        tracker = metric_f(p, y)
+        @info "initial $metric:" tracker
+    end
 
     for i in 1:config.nrounds
         fit!(m, cache, config)
 
-        if i % print_every_n == 0
+        if !isnothing(metric) && i % print_every_n == 0
             p = m(x; proj=true)
             tracker = metric_f(p, y)
             @info "$metric iter $i:" tracker
@@ -112,6 +118,7 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
     else
         @error "invalid updater"
     end
+    cache[:logger][:nrounds] += 1
     return nothing
 end
 

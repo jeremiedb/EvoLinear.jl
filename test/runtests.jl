@@ -3,9 +3,10 @@ using Test
 using Random: seed!
 
 @testset "EvoLinear.jl" begin
-
     @testset "Core API" begin
         include("core.jl")
     end
-    # Write your tests here.
+    @testset "MLJ API" begin
+        include("MLJ.jl")
+    end
 end

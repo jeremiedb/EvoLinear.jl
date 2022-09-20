@@ -4,19 +4,19 @@ using BenchmarkTools
 
 nobs = 1_000_000
 nfeats = 100
-T = Float32
+T = Float64
 
 x = randn(T, nobs, nfeats)
 coef = randn(T, nfeats)
 
 y = EvoLinear.sigmoid(x * coef .+ rand(T, nobs) * T(0.1))
 
-config = EvoLinear.EvoLinearRegressor(nrounds=10, eta=1.0, loss=:logistic, L1=0e-2, L2=0e-2)
-@time m = EvoLinear.fit(config; x, y, metric=:logloss)
+config = EvoLinear.EvoLinearRegressor(nrounds=16, eta=1.0, loss=:logistic, L1=0e-2, L2=0e-2)
+@time m = EvoLinear.fit(config; x, y, metric=:logloss, print_every_n = 8)
 sum(m.coef .== 0)
 
 config = EvoLinearRegressor(nrounds=10, loss=:logistic, L1=1e-2, L2=1e-1)
-@btime m = EvoLinear.fit(config; x, y, metric=:logloss);
+@btime m = EvoLinear.fit(config; x, y, metric=:logloss, print_every_n = 5);
 
 @time m0, cache = EvoLinear.init(config; x, y)
 @time EvoLinear.fit!(m0, cache, config);
@@ -44,13 +44,14 @@ params_xgb = [
     "booster" => "gblinear",
     "updater" => "shotgun", # shotgun / coord_descent
     "eta" => 1.0,
+    "lambda" => 0.0,
     "objective" => "reg:logistic",
     "print_every_n" => 5]
 
 nthread = Threads.nthreads()
 nthread = 8
 
-nrounds = 20
+nrounds = 10
 metrics = ["logloss"]
 
 @info "xgboost train:"

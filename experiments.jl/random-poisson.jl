@@ -14,11 +14,11 @@ maximum(y)
 mean(y)
 
 config = EvoLinearRegressor(nrounds=10, loss=:poisson, L1=0e-2, L2=0e-1)
-@time m = EvoLinear.fit(config; x, y, metric=:poisson)
+@time m = EvoLinear.fit(config; x, y, metric=:poisson_deviance)
 sum(m.coef .== 0)
 
 config = EvoLinearRegressor(nrounds=10, loss=:poisson, L1=1e-2, L2=1e-1)
-@btime m = EvoLinear.fit(config; x, y, metric=:poisson);
+@btime m = EvoLinear.fit(config; x, y);
 
 p = EvoLinear.predict_proj(m, x)
 @time EvoLinear.gamma(p, y)

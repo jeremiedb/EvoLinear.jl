@@ -14,20 +14,16 @@ x2 = rand(T, nobs)
 x = hcat(x1, x2)
 y = β1 * x1 + β2 * x2 + rand(T, nobs) * T(0.001)
 
-loss = EvoLinear.MSE
-m = EvoLinear.EvoLinearModel{loss}(1.1, 2.2)
-typeof(m)
-
 config = EvoLinear.EvoLinearRegressor(loss=:mse)
 m = EvoLinear.fit(config; x, y)
 m
 
 # EvoLinear.predict(m, x)
-m, cache = EvoLinear.init(config, x)
-@time EvoLinear.fit!(m, cache, config; x, y)
+m, cache = EvoLinear.init(config; x, y)
+@time EvoLinear.fit!(m, cache, config)
 # @code_warntype EvoLinear.fit!(m, cache, config; x, y)
-@btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
+@btime EvoLinear.fit!($m, $cache, $config)
 @info m
-p = EvoLinear.predict(m, x)
+p = EvoLinear.predict_proj(m, x)
 metric = EvoLinear.mse(p, y)
 @info metric
