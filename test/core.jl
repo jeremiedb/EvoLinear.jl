@@ -15,7 +15,7 @@
     m0 = EvoLinear.fit(config; x, y, metric=:mse)
     m1, cache = EvoLinear.init(config; x, y)
     for i in 1:config.nrounds
-    EvoLinear.fit!(m1, cache, config)
+        EvoLinear.fit!(m1, cache, config)
     end
 
     coef_diff = m0.coef .- m1.coef

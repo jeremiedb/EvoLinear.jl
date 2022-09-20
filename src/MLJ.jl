@@ -51,7 +51,7 @@ const EvoLinearRegressor_desc = "Regression models for various taks: mse, logist
 
 MMI.metadata_pkg.((EvoLinearRegressor),
     name="EvoLinear",
-    uuid="f6006082-12f8-11e9-0c9c-0d5d367ab1e5",
+    uuid="ab853011-1780-437f-b4b5-5de6f4777246",
     url="https://github.com/jeremiedb/EvoLinear.jl",
     julia=true,
     license="MIT",
