@@ -173,8 +173,8 @@ mutable struct EvoLinearModel{L<:Loss,C<:AbstractVector,B}
     coef::C
     bias::B
 end
-EvoLinearModel(loss::Loss; coef, bias) = EvoLinearModel{loss,typeof(coef),eltype(coef)}(coef, bias)
-EvoLinearModel(loss::Symbol; coef, bias) = EvoLinearModel{loss_types[loss],typeof(coef),eltype(coef)}(coef, bias)
+EvoLinearModel(loss::Type; coef, bias) = EvoLinearModel{loss,typeof(coef),eltype(coef)}(coef, bias)
+EvoLinearModel(loss::Symbol; coef, bias) = EvoLinearModel(loss_types[loss]; coef, bias)
 get_loss_type(::EvoLinearModel{L,C,B}) where {L,C,B} = L
 
 function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}

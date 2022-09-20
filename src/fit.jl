@@ -20,7 +20,6 @@ function init_cache(::EvoLinearRegressor{T};
 
     cache = (
         ∇¹=∇¹, ∇²=∇², ∇b=∇b,
-        # x=x, y=y, w=w,
         x=convert(Matrix{T}, x), y=convert(Vector{T}, y), w=w,
         ∑w=∑w,
         logger=Dict(:nrounds => 0)
@@ -47,7 +46,7 @@ Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target in
 - `x::AbstractMatrix`: Features matrix. Dimensions are `[nobs, num_features]`.
 - `y::AbstractVector`: Vector of observed targets.
 - `w=nothing`: Vector of weights. Can be be either a `Vector` or `nothing`. If `nothing`, assumes a vector of 1s. 
-- `metric=nothing`: Evaluation metric to be tracked through each iteration. Can be one of:
+- `metric=nothing`: Evaluation metric to be tracked through each iteration. Default to `nothing`. Can be one of:
 
     - `:mse`
     - `:logistic`
