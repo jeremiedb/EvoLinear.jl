@@ -14,11 +14,11 @@ maximum(y)
 mean(y)
 
 config = EvoLinearRegressor(nrounds=10, loss=:tweedie, L1=0e-2, L2=0e-1)
-@time m = EvoLinear.fit(config; x, y, metric=:tweedie)
+@time m = EvoLinear.fit(config; x, y, metric=:tweedie_deviance)
 sum(m.coef .== 0)
 
 config = EvoLinearRegressor(nrounds=10, loss=:tweedie, L1=1e-2, L2=1e-1)
-@btime m = EvoLinear.fit(config; x, y, metric=:tweedie);
+@btime EvoLinear.fit(config; x, y);
 
 p = EvoLinear.predict_proj(m, x)
 @time EvoLinear.gamma(p, y)
@@ -37,9 +37,10 @@ params_xgb = [
 nthread = Threads.nthreads()
 nthread = 8
 
-nrounds = 20
-metrics = ["gamma-deviance"]
-metrics = ["tweedie-nloglik@1.5"]
+nrounds = 100
+metrics = ["mae"]
+# metrics = ["gamma-deviance"]
+# metrics = ["tweedie-nloglik@1.5"]
 
 @info "xgboost train:"
-@time m_xgb = xgboost(x, nrounds, label=y, param=params_xgb, metrics=metrics, nthread=nthread, silent=0);
+@time m_xgb = xgboost(x, nrounds; label=y, param=params_xgb, metrics, nthread, silent=1);

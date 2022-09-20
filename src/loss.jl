@@ -26,7 +26,13 @@ end
     ifelse(x > 40, one(y), ifelse(x < -80, zero(y), y))
 end
 
-function update_∇!(L, ∇¹, ∇², x, y, p, w)
+
+"""
+    update_∇!(L, ∇¹, ∇², x, y, p, w)
+
+Update gradients w.r.t each feature. Each feature gradient update is dispatch according to the loss type (`mse`, `logistic`...).
+"""
+function update_∇!(L, ∇¹, ∇², x, y::A, p::A, w::A) where {A}
     @threads for feat in axes(x, 2)
         update_∇!(L, ∇¹, ∇², x, y, p, w, feat)
     end
