@@ -47,8 +47,6 @@ function predict(::EvoLinearTypes, fitresult, A)
 end
 
 # Metadata
-const EvoLinearRegressor_desc = "Regression models for various taks: mse, logistic, poisson, gamma, tweedie."
-
 MMI.metadata_pkg.((EvoLinearRegressor),
     name="EvoLinear",
     uuid="ab853011-1780-437f-b4b5-5de6f4777246",
@@ -61,5 +59,4 @@ MMI.metadata_model(EvoLinearRegressor,
     input_scitype=Union{MMI.Table(MMI.Continuous, MMI.Count, MMI.OrderedFactor),AbstractMatrix{MMI.Continuous}},
     target_scitype=AbstractVector{<:MMI.Continuous},
     weights=false,
-    path="EvoLinear.EvoLinearRegressor",
-    descr=EvoLinearRegressor_desc)
+    path="EvoLinear.EvoLinearRegressor")
