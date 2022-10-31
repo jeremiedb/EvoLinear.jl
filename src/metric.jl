@@ -179,3 +179,10 @@ const metric_dict = Dict(
     :gamma_deviance => gamma_deviance,
     :tweedie_deviance => tweedie_deviance
 )
+
+is_maximise(::typeof(EvoLinear.mse)) = false
+is_maximise(::typeof(EvoLinear.mae)) = false
+is_maximise(::typeof(EvoLinear.logloss)) = false
+is_maximise(::typeof(EvoLinear.poisson_deviance)) = false
+is_maximise(::typeof(EvoLinear.gamma_deviance)) = false
+is_maximise(::typeof(EvoLinear.tweedie_deviance)) = false
