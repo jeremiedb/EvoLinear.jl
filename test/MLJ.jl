@@ -24,7 +24,7 @@ fit!(mach, rows=train, verbosity=1)
 
 mach.model.nrounds += 2
 fit!(mach, rows=train, verbosity=1)
-mach.cache[:logger][:nrounds]
+mach.cache[:info][:nrounds]
 
 mach.model.loss = :mse
 fit!(mach, rows=train, verbosity=1)
@@ -68,14 +68,14 @@ y = rand(5)
 model = EvoLinearRegressor(loss=:mse)
 data = MLJBase.reformat(model, X, y);
 f, c, r = MLJBase.fit(model, 2, data...);
-c[:logger]
+c[:info]
 model.L2 = 0.1
 model.nrounds += 2
 MLJBase.update(model, 2, f, c, data...)
-c[:logger][:nrounds]
+c[:info][:nrounds]
 model.loss = :logistic
 MLJBase.update(model, 2, f, c, data...);
-c[:logger]
+c[:info]
 
 
 X = rand(5, 2)

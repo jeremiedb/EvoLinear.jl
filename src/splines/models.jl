@@ -1,36 +1,19 @@
-abstract type Loss end
-struct MSE <: Loss end
-struct Logistic <: Loss end
-struct Poisson <: Loss end
-struct Gamma <: Loss end
-struct Tweedie <: Loss end
-
-# make a Random Number Generator object
-mk_rng(rng::Random.AbstractRNG) = rng
-mk_rng(rng::T) where {T<:Integer} = Random.MersenneTwister(rng)
-
-const loss_types = Dict(
-    :mse => MSE,
-    :logistic => Logistic,
-    :poisson => Poisson,
-    :gamma => Gamma,
-    :tweedie => Tweedie
-)
-
-mutable struct EvoLinearRegressor{T<:AbstractFloat} <: MMI.Deterministic
+mutable struct EvoSplineRegressor{T<:AbstractFloat} <: MMI.Deterministic
     loss::Symbol
-    updater::Symbol
     nrounds::Int
+    opt::Symbol
+    batchsize::Int
+    act::Symbol
     eta::T
-    L1::T
     L2::T
-    rng
+    knots::Dict
+    rng::Any
     device::Symbol
 end
 
 
 """
-    EvoLinearRegressor(; kwargs...)
+    EvoSplineRegressor(; kwargs...)
 
 
 A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](https://github.com/jeremiedb/EvoLinear.jl), and implementing both an internal API and the MLJ model interface.
@@ -125,28 +108,32 @@ The fields of `report(mach)` are:
 - `:names`: Names of each of the features.
 
 """
-function EvoLinearRegressor(; kwargs...)
+function EvoSplineRegressor(; kwargs...)
 
     # defaults arguments
     args = Dict{Symbol,Any}(
         :loss => :mse,
-        :updater => :all,
         :nrounds => 10,
-        :eta => 1,
-        :L1 => 0,
-        :L2 => 0,
+        :opt => :Adam,
+        :batchsize => 1024,
+        :act => :relu,
+        :eta => 1e-3,
+        :L2 => 0.0,
+        :knots => Dict{Int,Int}(),
         :rng => 123,
         :device => :cpu,
-        :T => Float32
+        :T => Float32,
     )
 
     args_ignored = setdiff(keys(kwargs), keys(args))
     args_ignored_str = join(args_ignored, ", ")
-    length(args_ignored) > 0 && @info "Following $(length(args_ignored)) provided arguments will be ignored: $(args_ignored_str)."
+    length(args_ignored) > 0 &&
+        @info "Following $(length(args_ignored)) provided arguments will be ignored: $(args_ignored_str)."
 
     args_default = setdiff(keys(args), keys(kwargs))
     args_default_str = join(args_default, ", ")
-    length(args_default) > 0 && @info "Following $(length(args_default)) arguments were not provided and will be set to default: $(args_default_str)."
+    length(args_default) > 0 &&
+        @info "Following $(length(args_default)) arguments were not provided and will be set to default: $(args_default_str)."
 
     args_override = intersect(keys(args), keys(kwargs))
     for arg in args_override
@@ -155,49 +142,18 @@ function EvoLinearRegressor(; kwargs...)
 
     args[:rng] = mk_rng(args[:rng])::Random.AbstractRNG
 
-    model = EvoLinearRegressor(
+    model = EvoSplineRegressor(
         args[:loss],
-        args[:updater],
         args[:nrounds],
+        args[:opt],
+        args[:batchsize],
+        args[:act],    
         args[:T](args[:eta]),
-        args[:T](args[:L1]),
         args[:T](args[:L2]),
+        args[:knots],
         args[:rng],
-        args[:device])
+        args[:device],
+    )
 
     return model
 end
-
-mutable struct EvoLinearModel{L<:Loss,C,B}
-    coef::C
-    bias::B
-end
-EvoLinearModel(loss::Type; coef, bias) = EvoLinearModel{loss,typeof(coef),eltype(coef)}(coef, bias)
-EvoLinearModel(loss::Symbol; coef, bias) = EvoLinearModel(loss_types[loss]; coef, bias)
-get_loss_type(::EvoLinearModel{L,C,B}) where {L,C,B} = L
-
-function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
-    p = x * m.coef .+ m.bias
-    proj ? proj!(L, p) : nothing
-    return p
-end
-function (m::EvoLinearModel{L})(p::AbstractVector, x::AbstractMatrix; proj::Bool=true) where {L}
-    p .= x * m.coef .+ m.bias
-    proj ? proj!(L, p) : nothing
-    return p
-end
-
-function proj!(::L, p) where {L<:Type{MSE}}
-    return nothing
-end
-function proj!(::L, p) where {L<:Type{Logistic}}
-    p .= sigmoid.(p)
-    return nothing
-end
-function proj!(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
-    p .= exp.(p)
-    return nothing
-end
-
-
-const EvoLinearTypes = Union{EvoLinearRegressor}
