@@ -17,8 +17,7 @@ const loss_types = Dict(
     :tweedie => Tweedie
 )
 
-mutable struct EvoLinearRegressor{T<:AbstractFloat} <: MMI.Deterministic
-    loss::Symbol
+mutable struct EvoLinearRegressor{L,T} <: MMI.Deterministic
     updater::Symbol
     nrounds::Int
     eta::T
@@ -154,14 +153,15 @@ function EvoLinearRegressor(; kwargs...)
     end
 
     args[:rng] = mk_rng(args[:rng])::Random.AbstractRNG
+    T = args[:T]
+    L = loss_types[args[:loss]]
 
-    model = EvoLinearRegressor(
-        args[:loss],
+    model = EvoLinearRegressor{L,T}(
         args[:updater],
         args[:nrounds],
-        args[:T](args[:eta]),
-        args[:T](args[:L1]),
-        args[:T](args[:L2]),
+        T(args[:eta]),
+        T(args[:L1]),
+        T(args[:L2]),
         args[:rng],
         args[:device])
 
@@ -175,6 +175,7 @@ end
 EvoLinearModel(loss::Type; coef, bias) = EvoLinearModel{loss,typeof(coef),eltype(coef)}(coef, bias)
 EvoLinearModel(loss::Symbol; coef, bias) = EvoLinearModel(loss_types[loss]; coef, bias)
 get_loss_type(::EvoLinearModel{L,C,B}) where {L,C,B} = L
+get_loss_type(::EvoLinearRegressor{L,T}) where {L,T} = L
 
 function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
     p = x * m.coef .+ m.bias

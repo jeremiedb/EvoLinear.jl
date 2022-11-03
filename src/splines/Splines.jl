@@ -2,17 +2,17 @@ module Splines
 
 using ..EvoLinear
 
-export EvoSplineRegressor
-
 import MLJModelInterface as MMI
 import MLJModelInterface: fit, update, predict, schema
 
+export EvoSplineRegressor
+
 using Statistics
-using Distributions
+using Distributions: Normal
 using Flux
+using Flux: DataLoader
 using Optimisers
 using Flux: update!, @functor
-using MLUtils
 using SparseArrays
 using LinearAlgebra
 using Random

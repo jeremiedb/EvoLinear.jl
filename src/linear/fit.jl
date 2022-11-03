@@ -1,10 +1,10 @@
-function init(config::EvoLinearRegressor{T}, x, y; w = nothing) where {T}
+function init(config::EvoLinearRegressor{L,T}, x, y; w = nothing) where {L,T}
     cache = init_cache(config, x, y; w)
-    m = EvoLinearModel(config.loss; coef = zeros(T, size(x, 2)), bias = zero(T))
+    m = EvoLinearModel(L; coef = zeros(T, size(x, 2)), bias = zero(T))
     return m, cache
 end
 
-function init_cache(::EvoLinearRegressor{T}, x, y; w = nothing) where {T}
+function init_cache(::EvoLinearRegressor{L,T}, x, y; w = nothing) where {L,T}
     ∇¹, ∇² = zeros(T, size(x, 2)), zeros(T, size(x, 2))
     ∇b = zeros(T, 2)
     w = isnothing(w) ? ones(T, size(y)) : convert(Vector{T}, w)
@@ -48,7 +48,7 @@ Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target in
     - `:tweedie_deviance`
 """
 function fit(
-    config::EvoLinearRegressor{T};
+    config::EvoLinearRegressor{L,T};
     x_train,
     y_train,
     w_train = nothing,
@@ -61,9 +61,9 @@ function fit(
     verbosity = 1,
     fnames = nothing,
     return_logger = false
-) where {T}
+) where {L,T}
 
-    m, cache = init(config::EvoLinearRegressor, x_train, y_train; w = w_train)
+    m, cache = init(config, x_train, y_train; w = w_train)
 
     logger = nothing
     if !isnothing(metric) && !isnothing(x_eval) && !isnothing(y_eval)
@@ -95,7 +95,7 @@ function fit(
     end
 end
 
-function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor) where {L}
+function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor{L,T}) where {L,T}
 
     ∇¹, ∇², ∇b = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇b .* 0
     x, y, w = cache.x, cache.y, cache.w

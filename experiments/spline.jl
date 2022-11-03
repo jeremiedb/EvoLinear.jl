@@ -15,7 +15,7 @@ y_train = sin.(x_train[:, 1]) .+ randn(T, nobs) .* 0.1f0
 df = DataFrame(hcat(x_train, y_train), ["x", "y"]);
 draw(data(df) * mapping(:x, :y) * visual(Scatter, markersize = 5, color = "gray"))
 
-config = EvoLinear.EvoLinearRegressor(nrounds = 10, loss = :mse, L1 = 0e-1, L2 = 1)
+config = EvoLinearRegressor(nrounds = 10, loss = :mse, L1 = 0e-1, L2 = 1)
 @time ml = EvoLinear.fit(
     config;
     x_train,
@@ -28,7 +28,7 @@ config = EvoLinear.EvoLinearRegressor(nrounds = 10, loss = :mse, L1 = 0e-1, L2 =
 
 x_pred =
     reshape(range(start = minimum(x_train), stop = maximum(x_train), length = 100), :, 1)
-p = EvoLinear.predict_proj(ml, x_pred)
+p = EvoLinear.Linear.predict_proj(ml, x_pred)
 
 dfp = DataFrame(hcat(x_pred, p), ["x", "p"]);
 plt =

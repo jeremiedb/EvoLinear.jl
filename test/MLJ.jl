@@ -26,9 +26,6 @@ mach.model.nrounds += 2
 fit!(mach, rows=train, verbosity=1)
 mach.cache[:info][:nrounds]
 
-mach.model.loss = :mse
-fit!(mach, rows=train, verbosity=1)
-
 # predict on train data
 pred_train = predict(mach, selectrows(X, train))
 mean(abs.(pred_train - selectrows(Y, train)))
@@ -53,9 +50,6 @@ fit!(mach, rows=train, verbosity=1)
 mach.model.nrounds += 2
 fit!(mach, rows=train, verbosity=1)
 
-mach.model.loss = :mse
-fit!(mach, rows=train, verbosity=1)
-
 pred_train = predict(mach, selectrows(X, train))
 mean(abs.(pred_train - selectrows(Y, train)))
 
@@ -73,10 +67,6 @@ model.L2 = 0.1
 model.nrounds += 2
 MLJBase.update(model, 2, f, c, data...)
 c[:info][:nrounds]
-model.loss = :logistic
-MLJBase.update(model, 2, f, c, data...);
-c[:info]
-
 
 X = rand(5, 2)
 y = rand(5)
@@ -87,5 +77,3 @@ model.L2 = 0.1
 model.nrounds += 2
 MLJBase.update(model, 2, f, c, data...)
 MLJBase.update(model, 2, f, c, data...)
-model.loss = :logistic
-MLJBase.update(model, 2, f, c, data...);

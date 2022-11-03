@@ -11,9 +11,9 @@
     y_train = x_train * coef .+ rand(T, nobs) * T(0.1)
 
     config = EvoLinearRegressor(nrounds = 10, loss = :mse, L1 = 0, L2 = 1)
-    m = EvoLinear.EvoLinearModel(:mse; coef = rand(3), bias = rand())
-    m = EvoLinear.EvoLinearModel(:mse; coef = rand(Float32, 3), bias = rand(Float32))
-    m = EvoLinear.EvoLinearModel(EvoLinear.loss_types[:mse]; coef = rand(3), bias = rand())
+    m = EvoLinear.Linear.EvoLinearModel(:mse; coef = rand(3), bias = rand())
+    m = EvoLinear.Linear.EvoLinearModel(:mse; coef = rand(Float32, 3), bias = rand(Float32))
+    m = EvoLinear.Linear.EvoLinearModel(EvoLinear.Linear.loss_types[:mse]; coef = rand(3), bias = rand())
 
 end
 
@@ -31,7 +31,7 @@ end
 
     config = EvoLinearRegressor(nrounds = 10, loss = :mse, L1 = 0, L2 = 1)
     m0 = EvoLinear.fit(config; x_train, y_train, metric = :mse)
-    m1, cache = EvoLinear.init(config, x_train, y_train)
+    m1, cache = EvoLinear.Linear.init(config, x_train, y_train)
     for i = 1:config.nrounds
         EvoLinear.fit!(m1, cache, config)
     end
@@ -41,13 +41,13 @@ end
     @info "min coef diff" minimum(coef_diff)
     @test all(m0.coef .≈ m1.coef)
 
-    p = EvoLinear.predict_linear(m0, x_train)
-    p = EvoLinear.predict_linear!(p, m0, x_train)
-    p = EvoLinear.predict_proj(m0, x_train)
+    p = EvoLinear.Linear.predict_linear(m0, x_train)
+    p = EvoLinear.Linear.predict_linear!(p, m0, x_train)
+    p = EvoLinear.Linear.predict_proj(m0, x_train)
     p = m0(x_train)
 
-    metric_mse = EvoLinear.mse(p, y_train)
-    metric_mae = EvoLinear.mae(p, y_train)
+    metric_mse = EvoLinear.Metrics.mse(p, y_train)
+    metric_mae = EvoLinear.Metrics.mae(p, y_train)
     @test metric_mse < 0.12
     @test metric_mae < 0.28
 
@@ -95,12 +95,12 @@ end
     m = EvoLinear.fit(config; x_train, y_train, metric = :logloss)
 
     p = m(x_train)
-    p1 = EvoLinear.predict_proj(m, x_train)
+    p1 = EvoLinear.Linear.predict_proj(m, x_train)
 
     @test all(p .== p1)
 
-    metric = EvoLinear.logloss(p, y_train)
-    metric_w = EvoLinear.logloss(p, y_train, w)
+    metric = EvoLinear.Metrics.logloss(p, y_train)
+    metric_w = EvoLinear.Metrics.logloss(p, y_train, w)
     @test metric ≈ metric_w
     @test metric < 0.2
 
@@ -123,12 +123,12 @@ end
     m = EvoLinear.fit(config; x_train, y_train, metric = :poisson_deviance)
 
     p = m(x_train)
-    p1 = EvoLinear.predict_proj(m, x_train)
+    p1 = EvoLinear.Linear.predict_proj(m, x_train)
 
     @test all(p .== p1)
 
-    metric = EvoLinear.poisson_deviance(p, y_train)
-    metric_w = EvoLinear.poisson_deviance(p, y_train, w)
+    metric = EvoLinear.Metrics.poisson_deviance(p, y_train)
+    metric_w = EvoLinear.Metrics.poisson_deviance(p, y_train, w)
     @test metric ≈ metric_w
     @test metric < 0.005
 
@@ -151,12 +151,12 @@ end
     m = EvoLinear.fit(config; x_train, y_train, metric = :gamma_deviance)
 
     p = m(x_train)
-    p1 = EvoLinear.predict_proj(m, x_train)
+    p1 = EvoLinear.Linear.predict_proj(m, x_train)
 
     @test all(p .== p1)
 
-    metric = EvoLinear.gamma_deviance(p, y_train)
-    metric_w = EvoLinear.gamma_deviance(p, y_train, w)
+    metric = EvoLinear.Metrics.gamma_deviance(p, y_train)
+    metric_w = EvoLinear.Metrics.gamma_deviance(p, y_train, w)
     @test metric ≈ metric_w
     @test metric < 0.005
 
@@ -179,12 +179,12 @@ end
     m = EvoLinear.fit(config; x_train, y_train, metric = :tweedie_deviance)
 
     p = m(x_train)
-    p1 = EvoLinear.predict_proj(m, x_train)
+    p1 = EvoLinear.Linear.predict_proj(m, x_train)
 
     @test all(p .== p1)
 
-    metric = EvoLinear.tweedie_deviance(p, y_train)
-    metric_w = EvoLinear.tweedie_deviance(p, y_train, w)
+    metric = EvoLinear.Metrics.tweedie_deviance(p, y_train)
+    metric_w = EvoLinear.Metrics.tweedie_deviance(p, y_train, w)
     @test metric ≈ metric_w
     @test metric < 0.01
 

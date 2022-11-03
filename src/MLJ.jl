@@ -9,7 +9,7 @@ end
 
 function okay_to_continue(model, fitresult, cache)
     return model.nrounds - cache[:info][:nrounds] >= 0 &&
-           get_loss_type(fitresult) <: loss_types[model.loss]
+           get_loss_type(fitresult) == get_loss_type(model)
 end
 
 # Generate names to be used by feature_importances in the report
