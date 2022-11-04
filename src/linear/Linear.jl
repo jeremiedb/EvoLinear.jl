@@ -1,12 +1,14 @@
 module Linear
 
 using ..EvoLinear
+using ..EvoLinear: sigmoid, logit, mk_rng
+
 using ..EvoLinear.Metrics
+using ..EvoLinear.Losses
 using ..EvoLinear.CallBacks
-using ..EvoLinear: sigmoid, logit
+import ..EvoLinear.CallBacks: CallBackLinear
 
 using Base.Threads: @threads
-using Random
 # using StatsBase
 using Statistics: mean, std
 using LoopVectorization

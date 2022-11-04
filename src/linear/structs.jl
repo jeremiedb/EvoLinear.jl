@@ -1,22 +1,3 @@
-abstract type Loss end
-struct MSE <: Loss end
-struct Logistic <: Loss end
-struct Poisson <: Loss end
-struct Gamma <: Loss end
-struct Tweedie <: Loss end
-
-# make a Random Number Generator object
-mk_rng(rng::Random.AbstractRNG) = rng
-mk_rng(rng::T) where {T<:Integer} = Random.MersenneTwister(rng)
-
-const loss_types = Dict(
-    :mse => MSE,
-    :logistic => Logistic,
-    :poisson => Poisson,
-    :gamma => Gamma,
-    :tweedie => Tweedie
-)
-
 mutable struct EvoLinearRegressor{L,T} <: MMI.Deterministic
     updater::Symbol
     nrounds::Int
@@ -152,7 +133,7 @@ function EvoLinearRegressor(; kwargs...)
         args[arg] = kwargs[arg]
     end
 
-    args[:rng] = mk_rng(args[:rng])::Random.AbstractRNG
+    args[:rng] = mk_rng(args[:rng])
     T = args[:T]
     L = loss_types[args[:loss]]
 
@@ -185,7 +166,7 @@ end
 function (m::EvoLinearModel{L})(p::AbstractVector, x::AbstractMatrix; proj::Bool=true) where {L}
     p .= x * m.coef .+ m.bias
     proj ? proj!(L, p) : nothing
-    return p
+    return nothing
 end
 
 function proj!(::L, p) where {L<:Type{MSE}}

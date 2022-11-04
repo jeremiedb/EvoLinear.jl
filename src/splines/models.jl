@@ -1,12 +1,11 @@
-mutable struct EvoSplineRegressor{T<:AbstractFloat} <: MMI.Deterministic
-    loss::Symbol
+mutable struct EvoSplineRegressor{L,T} <: MMI.Deterministic
     nrounds::Int
     opt::Symbol
     batchsize::Int
     act::Symbol
     eta::T
     L2::T
-    knots::Dict
+    knots::Union{Dict,Nothing}
     rng::Any
     device::Symbol
 end
@@ -119,7 +118,7 @@ function EvoSplineRegressor(; kwargs...)
         :act => :relu,
         :eta => 1e-3,
         :L2 => 0.0,
-        :knots => Dict{Int,Int}(),
+        :knots => nothing,
         :rng => 123,
         :device => :cpu,
         :T => Float32,
@@ -140,19 +139,20 @@ function EvoSplineRegressor(; kwargs...)
         args[arg] = kwargs[arg]
     end
 
-    args[:rng] = mk_rng(args[:rng])::Random.AbstractRNG
+    args[:rng] = mk_rng(args[:rng])
+    T = args[:T]
+    L = loss_types[Symbol(args[:loss])]
 
-    model = EvoSplineRegressor(
-        args[:loss],
+    model = EvoSplineRegressor{L,T}(
         args[:nrounds],
-        args[:opt],
+        Symbol(args[:opt]),
         args[:batchsize],
-        args[:act],    
+        Symbol(args[:act]),
         args[:T](args[:eta]),
         args[:T](args[:L2]),
         args[:knots],
         args[:rng],
-        args[:device],
+        Symbol(args[:device]),
     )
 
     return model

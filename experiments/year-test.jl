@@ -11,34 +11,14 @@ using AWS: AWSCredentials, AWSConfig, @service
 aws_creds = AWSCredentials(ENV["AWS_ACCESS_KEY_ID_JDB"], ENV["AWS_SECRET_ACCESS_KEY_JDB"])
 aws_config = AWSConfig(; creds = aws_creds, region = "ca-central-1")
 
-path = "share/data/insurance-aicrowd.csv"
+path = "share/data/year/year.csv"
 raw = S3.get_object(
     "jeremiedb",
     path,
     Dict("response-content-type" => "application/octet-stream");
     aws_config,
 )
-df = DataFrame(CSV.File(raw))
-transform!(df, "claim_amount" => ByRow(x -> x > 0 ? 1.0f0 : 0.0f0) => "event")
-
-target = "event"
-feats = [
-    "vh_age",
-    "vh_value",
-    "vh_speed",
-    "vh_weight",
-    "drv_age1",
-    "pol_no_claims_discount",
-    "pol_coverage",
-    "pol_duration",
-    "pol_sit_duration",
-]
-
-pol_cov_dict = Dict{String,Float64}("Min" => 1, "Med1" => 2, "Med2" => 3, "Max" => 4)
-pol_cov_map(x) = get(pol_cov_dict, x, 4)
-transform!(df, "pol_coverage" => ByRow(pol_cov_map) => "pol_coverage")
-
-setdiff(feats, names(df))
+df = DataFrame(CSV.File(raw, header=false))
 
 seed!(123)
 nobs = nrow(df)

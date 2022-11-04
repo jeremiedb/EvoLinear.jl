@@ -67,7 +67,7 @@ function fit(
 
     logger = nothing
     if !isnothing(metric) && !isnothing(x_eval) && !isnothing(y_eval)
-        cb = CallBackLinear(; x_eval, y_eval, w_eval, metric, T)
+        cb = CallBackLinear(config; metric, x_eval, y_eval, w_eval)
         logger = init_logger(;
             T,
             metric,
@@ -128,4 +128,13 @@ end
 function update_bias!(m, ∇b)
     m.bias += -∇b[1] / ∇b[2]
     return nothing
+end
+
+function CallBackLinear(::EvoLinearRegressor{L,T}; metric, x_eval, y_eval, w_eval = nothing) where {L,T}
+    feval = metric_dict[metric]
+    x = convert(Matrix{T}, x_eval)
+    p = zeros(T, length(y_eval))
+    y = convert(Vector{T}, y_eval)
+    w = isnothing(w_eval) ? ones(T, size(y)) : convert(Vector{T}, w_eval)
+    return CallBackLinear(feval, x, p, y, w)
 end

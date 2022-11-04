@@ -16,3 +16,7 @@ end
     y = ifelse(x ≥ 0, inv(1 + t), t / (1 + t))
     ifelse(x > 40, one(y), ifelse(x < -80, zero(y), y))
 end
+
+# make a Random Number Generator object
+mk_rng(rng::Random.AbstractRNG) = rng
+mk_rng(rng::T) where {T<:Integer} = Random.MersenneTwister(rng)
