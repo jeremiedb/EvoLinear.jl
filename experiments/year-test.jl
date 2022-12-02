@@ -19,7 +19,7 @@ raw = S3.get_object(
     Dict("response-content-type" => "application/octet-stream");
     aws_config,
 )
-df = DataFrame(CSV.File(raw, header=false))
+df = DataFrame(CSV.File(raw, header = false))
 
 path = "share/data/year/year-train-idx.txt"
 raw = S3.get_object(
@@ -28,7 +28,7 @@ raw = S3.get_object(
     Dict("response-content-type" => "application/octet-stream");
     aws_config,
 )
-train_idx = DataFrame(CSV.File(raw, header=false))[:, 1] .+ 1
+train_idx = DataFrame(CSV.File(raw, header = false))[:, 1] .+ 1
 
 path = "share/data/year/year-eval-idx.txt"
 raw = S3.get_object(
@@ -37,7 +37,7 @@ raw = S3.get_object(
     Dict("response-content-type" => "application/octet-stream");
     aws_config,
 )
-eval_idx = DataFrame(CSV.File(raw, header=false))[:, 1] .+ 1
+eval_idx = DataFrame(CSV.File(raw, header = false))[:, 1] .+ 1
 
 X = df[:, 2:end]
 Y_raw = Float64.(df[:, 1])
@@ -48,16 +48,22 @@ function percent_rank(x::AbstractVector{T}) where {T}
 end
 
 transform!(X, names(X) .=> percent_rank .=> names(X))
-X = collect(Matrix{Float32}(X)')
+X = collect(Matrix{Float32}(X))
 Y = Float32.(Y)
+
+x_tot, y_tot = X[1:(end-51630), :], Y[1:(end-51630)]
+x_test, y_test = X[(end-51630+1):end, :], Y[(end-51630+1):end]
+x_train, x_eval = x_tot[train_idx, :], x_tot[eval_idx, :]
+y_train, y_eval = y_tot[train_idx], y_tot[eval_idx]
+
 
 config = EvoLinearRegressor(
     T = Float32,
-    loss = :logistic,
+    loss = :mse,
     L1 = 0.0,
     L2 = 0.0,
-    nrounds = 1000,
-    eta = 0.2,
+    nrounds = 300,
+    eta = 0.5,
 )
 
 # @time m = fit_evotree(config; x_train, y_train, print_every_n=25);
@@ -69,35 +75,36 @@ config = EvoLinearRegressor(
     y_eval,
     early_stopping_rounds = 100,
     print_every_n = 10,
-    metric = :logloss,
+    metric = :mse,
     return_logger = true,
 );
-p_linear = m(x_eval);
+p_linear = m(x_test);
+mean((p_linear .- y_test) .^ 2) * std(Y_raw)^2
 
 config = EvoSplineRegressor(
     T = Float32,
-    loss = :logistic,
-    nrounds = 400,
-    eta = 1e-3,
-    knots = Dict(1 => 4, 2 => 4, 3 => 4, 4 => 4, 5 => 4, 6 => 4, 7 => 4, 8 => 4),
-    act = :relu,
-    batchsize = 2048,
-    device = :cpu,
+    loss = :mse,
+    nrounds = 32,
+    eta = 1e-2,
+    knots = Dict(1 => 8, 3 => 8, 2 => 8, 6 => 8, 14 => 8, 20 => 8, 13 => 4, 57 => 4, 36 => 4, 38 => 4),
+    act = :tanh,
+    batchsize = 4096,
+    device = :gpu,
 )
-
-@time m, logger = EvoLinear.fit(
-    config;
-    x_train,
-    y_train,
-    x_eval,
-    y_eval,
-    early_stopping_rounds = 50,
-    print_every_n = 10,
-    metric = :logloss,
-    return_logger = true,
-);
-# @time m = EvoLinear.fit(config; x_train, y_train);
-p_spline = m(x_eval')
+# @time m, logger = EvoLinear.fit(
+#     config;
+#     x_train,
+#     y_train,
+#     x_eval,
+#     y_eval,
+#     early_stopping_rounds = 50,
+#     print_every_n = 10,
+#     metric = :mse,
+#     return_logger = true,
+# );
+@time m = EvoLinear.fit(config; x_train, y_train);
+p_spline = m(x_test' |> EvoLinear.Splines.gpu) |> EvoLinear.Splines.cpu;
+mean((p_spline .- y_test) .^ 2) * std(Y_raw)^2
 
 params_xgb = [
     "objective" => "reg:logistic",
