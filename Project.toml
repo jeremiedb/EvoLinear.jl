@@ -17,7 +17,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 Distributions = "0.25"
-FLux = "0.13"
+Flux = "0.13"
 LoopVectorization = "0.12"
 MLJModelInterface = "1.0"
 Optimisers = "0.2"
