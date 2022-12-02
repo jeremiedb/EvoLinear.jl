@@ -52,3 +52,11 @@ m = EvoLinear.fit(config; x, y, metric=:mse)
 p = EvoLinear.predict_proj(m, x)
 p = m(x)
 ```
+
+Splines - Experimental
+Number of knots for selected features is defined through a `Dict` of the form: `Dict(feat_id::Int => nknots::Int)`.
+```julia
+config = EvoSplineRegressor(loss=:mse, nrounds=10, knots = Dict(1 => 4, 5 => 8))
+m = EvoLinear.fit(config; x, y, metric=:mse)
+p = m(x')
+```

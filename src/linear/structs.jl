@@ -1,33 +1,12 @@
-abstract type Loss end
-struct MSE <: Loss end
-struct Logistic <: Loss end
-struct Poisson <: Loss end
-struct Gamma <: Loss end
-struct Tweedie <: Loss end
-
-# make a Random Number Generator object
-mk_rng(rng::Random.AbstractRNG) = rng
-mk_rng(rng::T) where {T<:Integer} = Random.MersenneTwister(rng)
-
-const loss_types = Dict(
-    :mse => MSE,
-    :logistic => Logistic,
-    :poisson => Poisson,
-    :gamma => Gamma,
-    :tweedie => Tweedie
-)
-
-mutable struct EvoLinearRegressor{T<:AbstractFloat,I<:Int,S<:Symbol} <: MMI.Deterministic
-    loss::S
-    updater::S
-    nrounds::I
+mutable struct EvoLinearRegressor{L,T} <: MMI.Deterministic
+    updater::Symbol
+    nrounds::Int
     eta::T
     L1::T
     L2::T
     rng
-    device::S
+    device::Symbol
 end
-# get_evolinear_type(::EvoLinearRegressor{T,I,S}) where {T,I,S} = T
 
 
 """
@@ -154,33 +133,40 @@ function EvoLinearRegressor(; kwargs...)
         args[arg] = kwargs[arg]
     end
 
-    args[:rng] = mk_rng(args[:rng])::Random.AbstractRNG
+    args[:rng] = mk_rng(args[:rng])
+    T = args[:T]
+    L = loss_types[args[:loss]]
 
-    model = EvoLinearRegressor(
-        args[:loss],
+    model = EvoLinearRegressor{L,T}(
         args[:updater],
         args[:nrounds],
-        args[:T](args[:eta]),
-        args[:T](args[:L1]),
-        args[:T](args[:L2]),
+        T(args[:eta]),
+        T(args[:L1]),
+        T(args[:L2]),
         args[:rng],
         args[:device])
 
     return model
 end
 
-mutable struct EvoLinearModel{L<:Loss,C<:AbstractVector,B}
+mutable struct EvoLinearModel{L<:Loss,C,B}
     coef::C
     bias::B
 end
 EvoLinearModel(loss::Type; coef, bias) = EvoLinearModel{loss,typeof(coef),eltype(coef)}(coef, bias)
 EvoLinearModel(loss::Symbol; coef, bias) = EvoLinearModel(loss_types[loss]; coef, bias)
 get_loss_type(::EvoLinearModel{L,C,B}) where {L,C,B} = L
+get_loss_type(::EvoLinearRegressor{L,T}) where {L,T} = L
 
 function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
     p = x * m.coef .+ m.bias
     proj ? proj!(L, p) : nothing
     return p
+end
+function (m::EvoLinearModel{L})(p::AbstractVector, x::AbstractMatrix; proj::Bool=true) where {L}
+    p .= x * m.coef .+ m.bias
+    proj ? proj!(L, p) : nothing
+    return nothing
 end
 
 function proj!(::L, p) where {L<:Type{MSE}}
@@ -194,19 +180,3 @@ function proj!(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
     p .= exp.(p)
     return nothing
 end
-
-function proj(::L, p) where {L<:Type{MSE}}
-    p_proj = identity(x)
-    return p_proj
-end
-function proj(::L, p) where {L<:Type{Logistic}}
-    p = sigmoid.(p)
-    return p_proj
-end
-function proj(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
-    p = exp.(p)
-    return p_proj
-end
-
-
-const EvoLinearTypes = Union{EvoLinearRegressor}

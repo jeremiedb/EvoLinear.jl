@@ -1,0 +1,144 @@
+function init(config::EvoLinearRegressor{L,T}, x, y; w = nothing) where {L,T}
+    cache = init_cache(config, x, y; w)
+    m = EvoLinearModel(L; coef = zeros(T, size(x, 2)), bias = zero(T))
+    return m, cache
+end
+
+function init_cache(::EvoLinearRegressor{L,T}, x, y; w = nothing) where {L,T}
+    ∇¹, ∇² = zeros(T, size(x, 2)), zeros(T, size(x, 2))
+    ∇b = zeros(T, 2)
+    w = isnothing(w) ? ones(T, size(y)) : convert(Vector{T}, w)
+    ∑w = sum(w)
+    cache = (
+        ∇¹ = ∇¹,
+        ∇² = ∇²,
+        ∇b = ∇b,
+        x = convert(Matrix{T}, x),
+        y = convert(Vector{T}, y),
+        w = w,
+        ∑w = ∑w,
+        info = Dict(:nrounds => 0),
+    )
+    return cache
+end
+
+
+"""
+    fit(config::EvoLinearRegressor;
+        x, y, w=nothing,
+        x_eval=nothing, y_eval=nothing, w_eval=nothing,
+        metric=:none,
+        print_every_n=1)
+
+Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target inputs, plus optionally `w` as weights and train a Linear boosted model.
+
+# Arguments
+- `config::EvoLinearRegressor`: 
+
+# Keyword arguments
+- `x::AbstractMatrix`: Features matrix. Dimensions are `[nobs, num_features]`.
+- `y::AbstractVector`: Vector of observed targets.
+- `w=nothing`: Vector of weights. Can be be either a `Vector` or `nothing`. If `nothing`, assumes a vector of 1s. 
+- `metric=nothing`: Evaluation metric to be tracked through each iteration. Default to `nothing`. Can be one of:
+
+    - `:mse`
+    - `:logistic`
+    - `:poisson_deviance`
+    - `:gamma_deviance`
+    - `:tweedie_deviance`
+"""
+function fit(
+    config::EvoLinearRegressor{L,T};
+    x_train,
+    y_train,
+    w_train = nothing,
+    x_eval = nothing,
+    y_eval = nothing,
+    w_eval = nothing,
+    metric = nothing,
+    print_every_n = 9999,
+    early_stopping_rounds = 9999,
+    verbosity = 1,
+    fnames = nothing,
+    return_logger = false,
+) where {L,T}
+
+    m, cache = init(config, x_train, y_train; w = w_train)
+
+    logger = nothing
+    if !isnothing(metric) && !isnothing(x_eval) && !isnothing(y_eval)
+        cb = CallBackLinear(config; metric, x_eval, y_eval, w_eval)
+        logger = init_logger(;
+            T,
+            metric,
+            maximise = is_maximise(cb.feval),
+            early_stopping_rounds,
+        )
+        cb(logger, 0, m)
+        (verbosity > 0) && @info "initialization" metric = logger[:metrics][end]
+    end
+
+    for iter = 1:config.nrounds
+        fit!(m, cache, config)
+        if !isnothing(logger)
+            cb(logger, iter, m)
+            if iter % print_every_n == 0 && verbosity > 0
+                @info "iter $iter" metric = logger[:metrics][end]
+            end
+            (logger[:iter_since_best] >= logger[:early_stopping_rounds]) && break
+        end
+    end
+    if return_logger
+        return (m, logger)
+    else
+        return m
+    end
+end
+
+function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor{L,T}) where {L,T}
+
+    ∇¹, ∇², ∇b = cache.∇¹ .* 0, cache.∇² .* 0, cache.∇b .* 0
+    x, y, w = cache.x, cache.y, cache.w
+    ∑w = cache.∑w
+
+    if config.updater == :all
+        # update all coefs then bias
+        p = m(x; proj = true)
+        update_∇_bias!(L, ∇b, x, y, p, w)
+        update_bias!(m, ∇b)
+
+        p = m(x; proj = true)
+        update_∇!(L, ∇¹, ∇², x, y, p, w)
+        update_coef!(m, ∇¹, ∇², ∑w, config)
+    else
+        @error "invalid updater"
+    end
+    cache[:info][:nrounds] += 1
+    return nothing
+end
+
+function update_coef!(m, ∇¹, ∇², ∑w, config)
+    update = -∇¹ ./ (∇² .+ config.L2 * ∑w)
+    update[abs.(update).<config.L1] .= 0
+    m.coef .+= update .* config.eta
+    return nothing
+end
+function update_bias!(m, ∇b)
+    m.bias += -∇b[1] / ∇b[2]
+    return nothing
+end
+
+function CallBackLinear(
+    ::EvoLinearRegressor{L,T};
+    metric,
+    x_eval,
+    y_eval,
+    w_eval = nothing,
+) where {L,T}
+    feval = metric_dict[metric]
+    x = convert(Matrix{T}, x_eval)
+    p = zeros(T, length(y_eval))
+    y = convert(Vector{T}, y_eval)
+    w = isnothing(w_eval) ? ones(T, size(y)) : convert(Vector{T}, w_eval)
+    return CallBackLinear(feval, x, p, y, w)
+end

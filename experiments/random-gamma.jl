@@ -8,24 +8,24 @@ nobs = 1_000_000
 nfeats = 100
 T = Float32
 
-x = randn(T, nobs, nfeats)
+x_train = randn(T, nobs, nfeats)
 coef = randn(T, nfeats) ./ 5
 bias = 1
 
-y = exp.(x * coef .+ bias .+ rand(T, nobs) * T(0.1))
-maximum(y)
-mean(y)
+y_train = exp.(x_train * coef .+ bias .+ rand(T, nobs) * T(0.1))
+maximum(y_train)
+mean(y_train)
 
 config = EvoLinearRegressor(nrounds=10, loss=:gamma, L1=0e-2, L2=0e-1)
-@time m = EvoLinear.fit(config; x, y, metric=:gamma_deviance)
+@time m = EvoLinear.fit(config; x_train, y_train, metric=:gamma_deviance)
 sum(m.coef .== 0)
 
 config = EvoLinearRegressor(nrounds=10, loss=:gamma, L1=1e-2, L2=1e-1)
-@btime m = EvoLinear.fit(config; x, y, metric=:gamma_deviance);
+@btime m = EvoLinear.fit(config; x_train, y_train, metric=:gamma_deviance);
 
-p = EvoLinear.predict_proj(m, x)
-@time EvoLinear.gamma(p, y)
-@btime EvoLinear.gamma($p, $y);
+p = EvoLinear.predict_proj(m, x_train)
+@time EvoLinear.gamma_deviance(p, y_train)
+@btime EvoLinear.gamma_deviance($p, $y_train);
 
 
 using XGBoost
