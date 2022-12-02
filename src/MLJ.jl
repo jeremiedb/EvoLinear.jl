@@ -6,10 +6,52 @@ function MMI.fit(model::EvoLinearRegressor, verbosity::Int, A, y)
     report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
     return fitresult, cache, report
 end
+function MMI.fit(model::EvoSplineRegressor, verbosity::Int, A, y)
+    fitresult, cache = EvoLinear.Splines.init(model, A.matrix, y)
+    while cache[:info][:nrounds] < model.nrounds
+        fit!(fitresult, cache)
+    end
+    report = nothing
+    # report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
+    return fitresult, cache, report
+end
 
 function okay_to_continue(model, fitresult, cache)
     return model.nrounds - cache[:info][:nrounds] >= 0 &&
            get_loss_type(fitresult) == get_loss_type(model)
+end
+
+function MMI.update(model::EvoLinearRegressor, verbosity::Integer, fitresult, cache, A, y)
+    if okay_to_continue(model, fitresult, cache)
+        while cache[:info][:nrounds] < model.nrounds
+            fit!(fitresult, cache, model)
+        end
+        report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
+    else
+        fitresult, cache, report = fit(model, verbosity, A, y)
+    end
+    return fitresult, cache, report
+end
+function MMI.update(model::EvoSplineRegressor, verbosity::Integer, fitresult, cache, A, y)
+    if okay_to_continue(model, fitresult, cache)
+        while cache[:info][:nrounds] < model.nrounds
+            fit!(fitresult, cache)
+        end
+        # report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
+        report = nothing
+    else
+        fitresult, cache, report = fit(model, verbosity, A, y)
+    end
+    return fitresult, cache, report
+end
+
+function predict(::EvoLinearRegressor, fitresult, A)
+    pred = fitresult(A.matrix)
+    return pred
+end
+function predict(::EvoSplineRegressor, fitresult, A)
+    pred = fitresult(A.matrix')
+    return pred
 end
 
 # Generate names to be used by feature_importances in the report
@@ -28,28 +70,6 @@ MMI.selectrows(::EvoLinearTypes, I, A) =
 
 # For EarlyStopping.jl supportm
 MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
-
-function MMI.update(model::EvoLinearTypes, verbosity::Integer, fitresult, cache, A, y)
-    if okay_to_continue(model, fitresult, cache)
-        while cache[:info][:nrounds] < model.nrounds
-            fit!(fitresult, cache, model)
-        end
-        report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
-    else
-        fitresult, cache, report = fit(model, verbosity, A, y)
-    end
-
-    return fitresult, cache, report
-end
-
-function predict(::EvoLinearRegressor, fitresult, A)
-    pred = fitresult(A.matrix)
-    return pred
-end
-function predict(::EvoSplineRegressor, fitresult, A)
-    pred = fitresult(A.matrix')
-    return pred
-end
 
 # Metadata
 MMI.metadata_pkg.(

@@ -16,7 +16,7 @@ using LoopVectorization
 import MLJModelInterface as MMI
 import MLJModelInterface: fit, update, predict, schema
 
-export EvoLinearRegressor, init, fit!, get_loss_type
+export EvoLinearRegressor, EvoLinearModel, init, fit!, get_loss_type
 
 include("structs.jl")
 include("loss.jl")

@@ -60,7 +60,7 @@ function fit(
     early_stopping_rounds = 9999,
     verbosity = 1,
     fnames = nothing,
-    return_logger = false
+    return_logger = false,
 ) where {L,T}
 
     m, cache = init(config, x_train, y_train; w = w_train)
@@ -102,9 +102,7 @@ function fit!(m::EvoLinearModel{L}, cache, config::EvoLinearRegressor{L,T}) wher
     ∑w = cache.∑w
 
     if config.updater == :all
-        ####################################################
         # update all coefs then bias
-        ####################################################
         p = m(x; proj = true)
         update_∇_bias!(L, ∇b, x, y, p, w)
         update_bias!(m, ∇b)
@@ -130,7 +128,13 @@ function update_bias!(m, ∇b)
     return nothing
 end
 
-function CallBackLinear(::EvoLinearRegressor{L,T}; metric, x_eval, y_eval, w_eval = nothing) where {L,T}
+function CallBackLinear(
+    ::EvoLinearRegressor{L,T};
+    metric,
+    x_eval,
+    y_eval,
+    w_eval = nothing,
+) where {L,T}
     feval = metric_dict[metric]
     x = convert(Matrix{T}, x_eval)
     p = zeros(T, length(y_eval))

@@ -20,7 +20,7 @@ function Spline(; nfeats, act, knots = Dict{Int,Int}())
     cum = 0
     for (k, v) in knots
         sp[cum+1:cum+v, k] .= 1
-        b[cum+1:cum+v] .= quantile(Normal(0, 1), collect(1:v) ./ (v + 1))
+        b[cum+1:cum+v] .= quantile.(Normal(0, 1), collect(1:v) ./ (v + 1))
         cum += v
     end
     w = randn(T, 1, nknots) ./ T(100) ./ T(sqrt(nfeats))
@@ -48,15 +48,15 @@ function Linear(; nfeats, mean = 0)
     return m
 end
 
-struct SplineModel{L,A,B,C}
+struct EvoSplineModel{L,A,B,C}
     loss::Type{L}
     bn::A
     linear::B
     spline::C
 end
 
-@functor SplineModel
-Flux.trainable(m::SplineModel) = (bn = m.bn, linear = m.linear, spline = m.spline)
+@functor EvoSplineModel
+Flux.trainable(m::EvoSplineModel) = (bn = m.bn, linear = m.linear, spline = m.spline)
 
 const act_dict = Dict(
     :sigmoid => Flux.sigmoid_fast,
@@ -67,16 +67,19 @@ const act_dict = Dict(
     :softplus => softplus,
 )
 
-function SplineModel(config::EvoSplineRegressor{L,T}; nfeats, mean = 0) where {L,T}
+function EvoSplineModel(config::EvoSplineRegressor{L,T}; nfeats, mean = 0) where {L,T}
     bn = BatchNorm(nfeats; affine = true)
     linear = Linear(; nfeats, mean)
     act = act_dict[config.act]
     spline = isnothing(config.knots) ? nothing : Spline(; nfeats, config.knots, act)
-    m = SplineModel{L,typeof(bn),typeof(linear),typeof(spline)}(L, bn, linear, spline)
+    m = EvoSplineModel{L,typeof(bn),typeof(linear),typeof(spline)}(L, bn, linear, spline)
     return m
 end
 
-function (m::SplineModel{L,A,B,C})(x; proj = true) where {L,A,B,C}
+get_loss_type(::EvoSplineModel{L,A,B,C}) where {L,A,B,C} = L
+get_loss_type(::EvoSplineRegressor{L,T}) where {L,T} = L
+
+function (m::EvoSplineModel{L,A,B,C})(x; proj = true) where {L,A,B,C}
     _x = x |> m.bn
     if isnothing(m.spline)
         p = m.linear(_x) |> vec
@@ -86,7 +89,7 @@ function (m::SplineModel{L,A,B,C})(x; proj = true) where {L,A,B,C}
     proj ? proj!(L, p) : nothing
     return p
 end
-function (m::SplineModel{L,A,B,C})(p, x; proj = true) where {L,A,B,C}
+function (m::EvoSplineModel{L,A,B,C})(p, x; proj = true) where {L,A,B,C}
     _x = x |> m.bn
     if isnothing(m.spline)
         p .= m.linear(_x) |> vec

@@ -7,6 +7,7 @@ using ..EvoLinear.Metrics
 using ..EvoLinear.Losses
 using ..EvoLinear.CallBacks
 import ..EvoLinear.CallBacks: CallBackLinear
+import ..EvoLinear: init, fit!, get_loss_type
 
 import MLJModelInterface as MMI
 import MLJModelInterface: fit, update, predict, schema
@@ -21,7 +22,7 @@ using Optimisers
 using SparseArrays
 using LinearAlgebra
 
-export EvoSplineRegressor
+export EvoSplineRegressor, EvoSplineModel
 
 include("models.jl")
 include("loss.jl")

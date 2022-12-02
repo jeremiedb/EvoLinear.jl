@@ -1,5 +1,6 @@
 function init(config::EvoSplineRegressor{L,T}, x, y; w = nothing) where {L,T}
 
+    @info "starting spline"
     device = config.device == :cpu ? Flux.cpu : Flux.gpu
     nfeats = size(x, 2)
     dtrain = DataLoader(
@@ -8,12 +9,12 @@ function init(config::EvoSplineRegressor{L,T}, x, y; w = nothing) where {L,T}
     )
     loss = loss_fn[L]
 
-    m = SplineModel(config; nfeats = nfeats, mean = mean(y)) |> device
+    m = EvoSplineModel(config; nfeats, mean = mean(y)) |> device
 
     opt = Optimisers.NAdam(config.eta)
     opts = Optimisers.setup(opt, m)
 
-    cache = (dtrain = dtrain, loss = loss, opts = opts)
+    cache = (dtrain = dtrain, loss = loss, opts = opts, info = Dict(:nrounds => 0))
     return m, cache
 end
 
@@ -55,7 +56,7 @@ function fit(
     end
 
     for iter = 1:config.nrounds
-        fit!(cache.loss, m, cache.dtrain, cache.opts)
+        fit!(m, cache)
         if !isnothing(logger)
             cb(logger, iter, m)
             if iter % print_every_n == 0 && verbosity > 0
@@ -71,11 +72,12 @@ function fit(
     end
 end
 
-function fit!(loss, m, data, opts)
-    for d in data
-        grad = gradient(m -> loss(m(d[:x]; proj = false), d[:y]), m)[1]
-        Optimisers.update!(opts, m, grad)
+function fit!(m, cache)
+    for d in cache[:dtrain]
+        grads = gradient(model -> cache[:loss](model(d[:x]; proj = false), d[:y]), m)[1]
+        Optimisers.update!(cache[:opts], m, grads)
     end
+    cache[:info][:nrounds] += 1
     return nothing
 end
 
