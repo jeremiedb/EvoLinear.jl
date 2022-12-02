@@ -43,8 +43,8 @@ end
 
     metric_mse = EvoLinear.Metrics.mse(p, y_train)
     metric_mae = EvoLinear.Metrics.mae(p, y_train)
-    @test metric_mse < 0.02
-    @test metric_mae < 0.12
+    @test metric_mse < 0.05
+    @test metric_mae < 0.2
 
 end
 
