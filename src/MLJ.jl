@@ -1,4 +1,4 @@
-function MMI.fit(model::EvoLinearTypes, verbosity::Int, A, y)
+function MMI.fit(model::EvoLinearRegressor, verbosity::Int, A, y)
     fitresult, cache = init(model, A.matrix, y)
     while cache[:info][:nrounds] < model.nrounds
         fit!(fitresult, cache, model)
@@ -23,7 +23,8 @@ MMI.reformat(::EvoLinearTypes, X::AbstractMatrix) =
     ((matrix = X, names = ["feat_$i" for i = 1:size(X, 2)]),)
 MMI.selectrows(::EvoLinearTypes, I, A, y) =
     ((matrix = view(A.matrix, I, :), names = A.names), view(y, I))
-MMI.selectrows(::EvoLinearTypes, I, A) = ((matrix = view(A.matrix, I, :), names = A.names),)
+MMI.selectrows(::EvoLinearTypes, I, A) =
+    ((matrix = view(A.matrix, I, :), names = A.names),)
 
 # For EarlyStopping.jl supportm
 MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
@@ -41,8 +42,12 @@ function MMI.update(model::EvoLinearTypes, verbosity::Integer, fitresult, cache,
     return fitresult, cache, report
 end
 
-function predict(::EvoLinearTypes, fitresult, A)
+function predict(::EvoLinearRegressor, fitresult, A)
     pred = fitresult(A.matrix)
+    return pred
+end
+function predict(::EvoSplineRegressor, fitresult, A)
+    pred = fitresult(A.matrix')
     return pred
 end
 
@@ -66,4 +71,15 @@ MMI.metadata_model(
     target_scitype = AbstractVector{<:MMI.Continuous},
     weights = false,
     path = "EvoLinear.EvoLinearRegressor",
+)
+
+MMI.metadata_model(
+    EvoSplineRegressor,
+    input_scitype = Union{
+        MMI.Table(MMI.Continuous, MMI.Count, MMI.OrderedFactor),
+        AbstractMatrix{MMI.Continuous},
+    },
+    target_scitype = AbstractVector{<:MMI.Continuous},
+    weights = false,
+    path = "EvoLinear.EvoSplineRegressor",
 )

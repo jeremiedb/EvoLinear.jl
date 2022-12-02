@@ -180,6 +180,3 @@ function proj!(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
     p .= exp.(p)
     return nothing
 end
-
-
-const EvoLinearTypes = Union{EvoLinearRegressor}

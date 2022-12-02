@@ -8,16 +8,9 @@ function init(config::EvoSplineRegressor{L,T}, x, y; w = nothing) where {L,T}
     )
     loss = loss_fn[L]
 
-    m =
-        SplineModel(
-            config;
-            nfeats = nfeats,
-            knots = config.knots,
-            mean = mean(y),
-            act = act_dict[config.act],
-        ) |> device
+    m = SplineModel(config; nfeats = nfeats, mean = mean(y)) |> device
 
-    opt = Optimisers.Adam(config.eta)
+    opt = Optimisers.NAdam(config.eta)
     opts = Optimisers.setup(opt, m)
 
     cache = (dtrain = dtrain, loss = loss, opts = opts)
@@ -81,18 +74,10 @@ end
 function fit!(loss, m, data, opts)
     for d in data
         grad = gradient(m -> loss(m(d[:x]; proj = false), d[:y]), m)[1]
-        opts, m = Optimisers.update!(opts, m, grad)
+        Optimisers.update!(opts, m, grad)
     end
+    return nothing
 end
-
-const act_dict = Dict(
-    :sigmoid => sigmoid,
-    :tanh => tanh,
-    :relu => relu,
-    :elu => elu,
-    :gelu => gelu,
-    :softplus => softplus,
-)
 
 function CallBackLinear(
     config::EvoSplineRegressor{L,T};

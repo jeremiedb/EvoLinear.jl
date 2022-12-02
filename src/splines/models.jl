@@ -15,13 +15,12 @@ end
     EvoSplineRegressor(; kwargs...)
 
 
-A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](https://github.com/jeremiedb/EvoLinear.jl), and implementing both an internal API and the MLJ model interface.
+A model type for constructing a EvoSplineRegressor, based on [EvoLinear.jl](https://github.com/jeremiedb/EvoLinear.jl), and implementing both an internal API and the MLJ model interface.
 
 # Keyword arguments
 
 - `loss=:mse`: loss function to be minimised. 
     Can be one of:
-    
     - `:mse`
     - `:logistic`
     - `:poisson`
@@ -38,11 +37,11 @@ A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](http
 
 # Internal API
 
-Do `config = EvoLinearRegressor()` to construct an hyper-parameter struct with default hyper-parameters.
+Do `config = EvoSplineRegressor()` to construct an hyper-parameter struct with default hyper-parameters.
 Provide keyword arguments as listed above to override defaults, for example:
 
 ```julia
-EvoLinearRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
+EvoSplineRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
 ```
 
 ## Training model
@@ -50,7 +49,7 @@ EvoLinearRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
 A model is built using [`fit`](@ref):
 
 ```julia
-config = EvoLinearRegressor()
+config = EvoSplineRegressor()
 m = fit(config; x, y, w)
 ```
 
@@ -67,11 +66,11 @@ preds = m(x)
 From MLJ, the type can be imported using:
 
 ```julia
-EvoLinearRegressor = @load EvoLinearRegressor pkg=EvoLinear
+EvoSplineRegressor = @load EvoSplineRegressor pkg=EvoLinear
 ```
 
 Do `model = EvoLinearRegressor()` to construct an instance with default hyper-parameters.
-Provide keyword arguments to override hyper-parameter defaults, as in `EvoLinearRegressor(loss=...)`.
+Provide keyword arguments to override hyper-parameter defaults, as in `EvoSplineRegressor(loss=...)`.
 
 ## Training model
 
@@ -96,7 +95,7 @@ Train the machine using `fit!(mach, rows=...)`.
 
 The fields of `fitted_params(mach)` are:
 
-- `:fitresult`: the `EvoLinearModel` object returned by EvoLnear.jl fitting algorithm.
+- `:fitresult`: the `SplineModel` object returned by EvoSplineRegressor fitting algorithm.
 
 ## Report
 

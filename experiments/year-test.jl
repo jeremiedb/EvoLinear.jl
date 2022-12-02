@@ -3,7 +3,8 @@ using CSV
 using DataFrames
 using EvoLinear
 using XGBoost
-using StatsBase: sample
+using StatsBase: sample, tiedrank
+using Statistics
 using Random: seed!
 
 using AWS: AWSCredentials, AWSConfig, @service
@@ -20,17 +21,35 @@ raw = S3.get_object(
 )
 df = DataFrame(CSV.File(raw, header=false))
 
-seed!(123)
-nobs = nrow(df)
-id_train = sample(1:nobs, Int(round(0.8 * nobs)), replace = false)
+path = "share/data/year/year-train-idx.txt"
+raw = S3.get_object(
+    "jeremiedb",
+    path,
+    Dict("response-content-type" => "application/octet-stream");
+    aws_config,
+)
+train_idx = DataFrame(CSV.File(raw, header=false))[:, 1] .+ 1
 
-df_train = dropmissing(df[id_train, [feats..., target]])
-df_eval = dropmissing(df[Not(id_train), [feats..., target]])
+path = "share/data/year/year-eval-idx.txt"
+raw = S3.get_object(
+    "jeremiedb",
+    path,
+    Dict("response-content-type" => "application/octet-stream");
+    aws_config,
+)
+eval_idx = DataFrame(CSV.File(raw, header=false))[:, 1] .+ 1
 
-x_train = Matrix{Float32}(df_train[:, feats])
-x_eval = Matrix{Float32}(df_eval[:, feats])
-y_train = Vector{Float32}(df_train[:, target])
-y_eval = Vector{Float32}(df_eval[:, target])
+X = df[:, 2:end]
+Y_raw = Float64.(df[:, 1])
+Y = (Y_raw .- mean(Y_raw)) ./ std(Y_raw)
+
+function percent_rank(x::AbstractVector{T}) where {T}
+    return tiedrank(x) / (length(x) + 1)
+end
+
+transform!(X, names(X) .=> percent_rank .=> names(X))
+X = collect(Matrix{Float32}(X)')
+Y = Float32.(Y)
 
 config = EvoLinearRegressor(
     T = Float32,

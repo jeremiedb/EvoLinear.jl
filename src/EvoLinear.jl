@@ -19,6 +19,8 @@ using .Linear
 include("splines/Splines.jl")
 using .Splines
 
+const EvoLinearTypes = Union{EvoLinearRegressor,EvoSplineRegressor}
+
 include("MLJ.jl")
 
 end

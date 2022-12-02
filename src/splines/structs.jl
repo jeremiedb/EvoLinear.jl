@@ -12,7 +12,7 @@ function (m::Spline)(x)
     m.w * m.act.(m.mat * x .- m.b)
 end
 
-function Spline(; nfeats, knots = Dict{Int,Int}(), act = relu)
+function Spline(; nfeats, act, knots = Dict{Int,Int}())
     T = Float32
     nknots = sum(values(knots))
     sp = spzeros(T, nknots, nfeats)
@@ -56,24 +56,27 @@ struct SplineModel{L,A,B,C}
 end
 
 @functor SplineModel
-Flux.trainable(m::SplineModel) = (linear = m.linear, spline = m.spline)
+Flux.trainable(m::SplineModel) = (bn = m.bn, linear = m.linear, spline = m.spline)
 
-function SplineModel(
-    ::EvoSplineRegressor{L,T};
-    nfeats,
-    knots = nothing,
-    act = elu,
-    mean = 0,
-    affine = true,
-) where {L,T}
-    bn = BatchNorm(nfeats; affine)
+const act_dict = Dict(
+    :sigmoid => Flux.sigmoid_fast,
+    :tanh => tanh,
+    :relu => relu,
+    :elu => elu,
+    :gelu => gelu,
+    :softplus => softplus,
+)
+
+function SplineModel(config::EvoSplineRegressor{L,T}; nfeats, mean = 0) where {L,T}
+    bn = BatchNorm(nfeats; affine = true)
     linear = Linear(; nfeats, mean)
-    spline = isnothing(knots) ? nothing : Spline(; nfeats, knots, act)
-    m = SplineModel{L, typeof(bn), typeof(linear), typeof(spline)}(L, bn, linear, spline)
+    act = act_dict[config.act]
+    spline = isnothing(config.knots) ? nothing : Spline(; nfeats, config.knots, act)
+    m = SplineModel{L,typeof(bn),typeof(linear),typeof(spline)}(L, bn, linear, spline)
     return m
 end
 
-function (m::SplineModel{L,A,B,C})(x; proj=true) where {L,A,B,C}
+function (m::SplineModel{L,A,B,C})(x; proj = true) where {L,A,B,C}
     _x = x |> m.bn
     if isnothing(m.spline)
         p = m.linear(_x) |> vec
@@ -83,7 +86,7 @@ function (m::SplineModel{L,A,B,C})(x; proj=true) where {L,A,B,C}
     proj ? proj!(L, p) : nothing
     return p
 end
-function (m::SplineModel{L,A,B,C})(p, x; proj=true) where {L,A,B,C}
+function (m::SplineModel{L,A,B,C})(p, x; proj = true) where {L,A,B,C}
     _x = x |> m.bn
     if isnothing(m.spline)
         p .= m.linear(_x) |> vec

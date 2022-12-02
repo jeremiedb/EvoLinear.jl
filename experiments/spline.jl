@@ -26,6 +26,7 @@ config = EvoLinearRegressor(nrounds = 100, loss = :mse, L1 = 0e-1, L2 = 1)
     y_eval = y_train,
     metric = :mae,
     print_every_n = 10,
+    early_stopping_rounds = 5
 );
 
 x_pred =
@@ -40,8 +41,8 @@ draw(plt)
 
 config = EvoSplineRegressor(
     loss = :mse,
-    nrounds = 100,
-    knots = Dict(1 => 16),
+    nrounds = 200,
+    knots = Dict(1 => 4),
     act = :elu,
     eta = 1e-2,
     batchsize = 200,
@@ -55,6 +56,7 @@ ms = EvoLinear.fit(config; x_train, y_train)
     y_eval = y_train,
     metric = :mae,
     print_every_n = 10,
+    early_stopping_rounds = 5
 );
 # fit!(loss, m, dtrain, opts)
 pl = ml(x_pred)
