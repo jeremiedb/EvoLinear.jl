@@ -53,6 +53,22 @@ fit!(mach, rows=train, verbosity=1)
 pred_train = predict(mach, selectrows(X, train))
 mean(abs.(pred_train - selectrows(Y, train)))
 
+##################################################
+### SplineRegressor
+##################################################
+X = MLJBase.matrix(X)
+model = EvoSplineRegressor(loss=:mse, nrounds=20, knots = Dict(1 => 4))
+
+mach = machine(model, X, y)
+train, test = partition(eachindex(y), 0.7, shuffle=true); # 70:30 split
+fit!(mach, rows=train, verbosity=1)
+
+mach.model.nrounds += 10
+fit!(mach, rows=train, verbosity=1)
+
+pred_train = predict(mach, selectrows(X, train))
+mean(abs.(pred_train - selectrows(Y, train)))
+
 
 ####################################################################################
 # tests that `update` handles data correctly in the case of a cold restart:
