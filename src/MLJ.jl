@@ -73,7 +73,7 @@ MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
 
 # Metadata
 MMI.metadata_pkg.(
-    (EvoLinearRegressor),
+    (EvoLinearRegressor, EvoSplineRegressor),
     name = "EvoLinear",
     uuid = "ab853011-1780-437f-b4b5-5de6f4777246",
     url = "https://github.com/jeremiedb/EvoLinear.jl",
