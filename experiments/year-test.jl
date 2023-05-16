@@ -78,7 +78,7 @@ config = EvoLinearRegressor(
     metric = :mse,
     return_logger = true,
 );
-p_linear = m(x_test);
+@time p_linear = m(x_test);
 mean((p_linear .- y_test) .^ 2) * std(Y_raw)^2
 
 config = EvoSplineRegressor(
@@ -86,24 +86,37 @@ config = EvoSplineRegressor(
     loss = :mse,
     nrounds = 32,
     eta = 1e-2,
-    knots = Dict(1 => 8, 3 => 8, 2 => 8, 6 => 8, 14 => 8, 20 => 8, 13 => 4, 57 => 4, 36 => 4, 38 => 4),
+    knots = Dict(
+        1 => 8,
+        3 => 8,
+        2 => 8,
+        6 => 8,
+        14 => 8,
+        20 => 8,
+        13 => 4,
+        57 => 4,
+        36 => 4,
+        38 => 4,
+    ),
     act = :tanh,
     batchsize = 4096,
-    device = :gpu,
+    device = :cpu,
 )
-# @time m, logger = EvoLinear.fit(
-#     config;
-#     x_train,
-#     y_train,
-#     x_eval,
-#     y_eval,
-#     early_stopping_rounds = 50,
-#     print_every_n = 10,
-#     metric = :mse,
-#     return_logger = true,
-# );
-@time m = EvoLinear.fit(config; x_train, y_train);
-p_spline = m(x_test' |> EvoLinear.Splines.gpu) |> EvoLinear.Splines.cpu;
+@time m, logger = EvoLinear.fit(
+    config;
+    x_train,
+    y_train,
+    x_eval,
+    y_eval,
+    early_stopping_rounds = 100,
+    print_every_n = 10,
+    metric = :mse,
+    return_logger = true,
+);
+@time p_spline = m(x_test');
+# @profview m(x_test');
+
+# p_spline = m(x_test' |> EvoLinear.Splines.gpu) |> EvoLinear.Splines.cpu;
 mean((p_spline .- y_test) .^ 2) * std(Y_raw)^2
 
 params_xgb = [
