@@ -7,11 +7,10 @@ EvoLinearRegressor
 EvoSplineRegressor
 ```
 
-## Training & Inference
+## Training
 
 ```@docs
 EvoLinear.fit
-EvoLinear.predict
 ```
 
 ## Metrics
