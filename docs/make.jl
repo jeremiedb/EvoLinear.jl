@@ -8,6 +8,7 @@ makedocs(
     pages=[
         "Home" => "index.md",
         "API" => "api.md",
+        "Internals" => "internals.md",
     ],
     format=Documenter.HTML(
         sidebar_sitename=true,
