@@ -1,22 +1,26 @@
 module EvoLinear
 
-using Base.Threads: @threads
-using Random
-using StatsBase
 using Statistics: mean, std
-using LoopVectorization
+import Random
 
-import MLJModelInterface as MMI
 import MLJModelInterface as MMI
 import MLJModelInterface: fit, update, predict, schema
 
-export EvoLinearRegressor
+export EvoLinearRegressor, EvoSplineRegressor
 
-include("structs.jl")
-include("loss.jl")
+include("utils.jl")
 include("metric.jl")
-include("predict.jl")
-include("fit.jl")
+include("callback.jl")
+include("losses.jl")
+
+include("linear/Linear.jl")
+using .Linear
+
+include("splines/Splines.jl")
+using .Splines
+
+const EvoLinearTypes = Union{EvoLinearRegressor,EvoSplineRegressor}
+
 include("MLJ.jl")
 
 end

@@ -1,3 +1,8 @@
+module Metrics
+
+using LoopVectorization
+
+export metric_dict, is_maximise
 
 """
     mse(p, y)
@@ -179,3 +184,12 @@ const metric_dict = Dict(
     :gamma_deviance => gamma_deviance,
     :tweedie_deviance => tweedie_deviance
 )
+
+is_maximise(::typeof(mse)) = false
+is_maximise(::typeof(mae)) = false
+is_maximise(::typeof(logloss)) = false
+is_maximise(::typeof(poisson_deviance)) = false
+is_maximise(::typeof(gamma_deviance)) = false
+is_maximise(::typeof(tweedie_deviance)) = false
+
+end # module
