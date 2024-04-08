@@ -9,7 +9,7 @@ import MLJModelInterface: fit, update, predict, schema
 export EvoLinearRegressor, EvoSplineRegressor
 
 include("utils.jl")
-include("metric.jl")
+include("metrics.jl")
 include("callback.jl")
 include("losses.jl")
 

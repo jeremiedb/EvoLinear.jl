@@ -1,32 +1,25 @@
-
 module CallBacks
 
 using ..EvoLinear.Metrics
 
 export init_logger, update_logger!
 
-struct CallBackLinear{F,M,V,Y}
+struct CallBack{F,M,V,Y}
     feval::F
     x::M
     p::V
     y::Y
     w::V
 end
-function (cb::CallBackLinear)(logger, iter, m)
-    m(cb.p, cb.x; proj = true)
-    metric = cb.feval(cb.p, cb.y, cb.w)
-    update_logger!(logger, iter, metric)
-    return nothing
-end
 
-function init_logger(; T, metric, maximise, early_stopping_rounds)
+function init_logger(; metric, maximise, early_stopping_rounds)
     logger = Dict(
         :name => String(metric),
         :maximise => maximise,
         :early_stopping_rounds => early_stopping_rounds,
         :nrounds => 0,
         :iter => Int[],
-        :metrics => T[],
+        :metrics => Float32[],
         :iter_since_best => 0,
         :best_iter => 0,
         :best_metric => 0.0,
@@ -34,7 +27,11 @@ function init_logger(; T, metric, maximise, early_stopping_rounds)
     return logger
 end
 
-function update_logger!(logger, iter, metric)
+function update_logger!(logger, m, cb, iter)
+
+    m(cb.p, cb.x; proj=true)
+    metric = cb.feval(cb.p, cb.y, cb.w)
+
     logger[:nrounds] = iter
     push!(logger[:iter], iter)
     push!(logger[:metrics], metric)

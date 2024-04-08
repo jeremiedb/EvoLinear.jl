@@ -6,7 +6,7 @@ using ..EvoLinear: sigmoid, logit, mk_rng
 using ..EvoLinear.Metrics
 using ..EvoLinear.Losses
 using ..EvoLinear.CallBacks
-import ..EvoLinear.CallBacks: CallBackLinear
+import ..EvoLinear.CallBacks: CallBack
 import ..EvoLinear: init, fit!, get_loss_type
 
 import MLJModelInterface as MMI

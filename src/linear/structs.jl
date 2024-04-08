@@ -1,11 +1,10 @@
-mutable struct EvoLinearRegressor{L,T} <: MMI.Deterministic
+mutable struct EvoLinearRegressor{L} <: MMI.Deterministic
     updater::Symbol
     nrounds::Int
-    eta::T
-    L1::T
-    L2::T
+    eta::Float32
+    L1::Float32
+    L2::Float32
     rng
-    device::Symbol
 end
 
 
@@ -115,9 +114,7 @@ function EvoLinearRegressor(; kwargs...)
         :eta => 1,
         :L1 => 0,
         :L2 => 0,
-        :rng => 123,
-        :device => :cpu,
-        :T => Float32
+        :rng => 123
     )
 
     args_ignored = setdiff(keys(kwargs), keys(args))
@@ -134,29 +131,29 @@ function EvoLinearRegressor(; kwargs...)
     end
 
     args[:rng] = mk_rng(args[:rng])
-    T = args[:T]
     L = loss_types[args[:loss]]
 
-    model = EvoLinearRegressor{L,T}(
+    model = EvoLinearRegressor{L}(
         args[:updater],
         args[:nrounds],
-        T(args[:eta]),
-        T(args[:L1]),
-        T(args[:L2]),
-        args[:rng],
-        args[:device])
+        args[:eta],
+        args[:L1],
+        args[:L2],
+        args[:rng])
 
     return model
 end
 
-mutable struct EvoLinearModel{L<:Loss,C,B}
-    coef::C
+mutable struct EvoLinearModel{L<:Loss,A,B}
+    loss::Type{L}
+    coef::A
     bias::B
+    info::Dict{Symbol,Any}
 end
-EvoLinearModel(loss::Type; coef, bias) = EvoLinearModel{loss,typeof(coef),eltype(coef)}(coef, bias)
-EvoLinearModel(loss::Symbol; coef, bias) = EvoLinearModel(loss_types[loss]; coef, bias)
-get_loss_type(::EvoLinearModel{L,C,B}) where {L,C,B} = L
-get_loss_type(::EvoLinearRegressor{L,T}) where {L,T} = L
+EvoLinearModel(loss::Type{<:Loss}; coef, bias, info) = EvoLinearModel(loss, coef, bias, info)
+EvoLinearModel(loss::Symbol; coef, bias, info) = EvoLinearModel(loss_types[loss]; coef, bias, info)
+get_loss_type(m::EvoLinearModel) = m.loss
+get_loss_type(::EvoLinearRegressor{L}) where {L} = L
 
 function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
     p = x * m.coef .+ m.bias
@@ -167,6 +164,24 @@ function (m::EvoLinearModel{L})(p::AbstractVector, x::AbstractMatrix; proj::Bool
     p .= x * m.coef .+ m.bias
     proj ? proj!(L, p) : nothing
     return nothing
+end
+function (m::EvoLinearModel{L})(data; proj::Bool=true) where {L}
+
+    Tables.istable(data) || error("data must be Table compatible")
+
+    T = Float32
+    feature_names = m.info[:feature_names]
+    nobs = Tables.DataAPI.nrow(data)
+    nfeats = length(feature_names)
+
+    x = zeros(T, nobs, nfeats)
+    @threads for j in axes(x, 2)
+        @views x[:, j] .= Tables.getcolumn(data, feature_names[j])
+    end
+
+    p = x * m.coef .+ m.bias
+    proj ? proj!(L, p) : nothing
+    return p
 end
 
 function proj!(::L, p) where {L<:Type{MSE}}
