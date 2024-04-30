@@ -74,7 +74,7 @@ end
 # The prediction p is assumed to be on the projected basis (exp(pred_linear))
 # Derivative is w.r.t to β on the linear basis
 ###################################
-function update_∇!(::Type{Poisson}, ∇¹, ∇², x, y, p, w, feat)
+function update_∇!(::Type{PoissonDev}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
         ∇1 += 2 * (p[i] - y[i]) * x[i, feat] * w[i]
@@ -84,7 +84,7 @@ function update_∇!(::Type{Poisson}, ∇¹, ∇², x, y, p, w, feat)
     ∇²[feat] = ∇2
     return nothing
 end
-function update_∇_bias!(::Type{Poisson}, ∇_bias, x, y, p, w)
+function update_∇_bias!(::Type{PoissonDev}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
         ∇1 += 2 * (p[i] - y[i]) * w[i]
@@ -102,7 +102,7 @@ end
 # The prediction p is assumed to be on the projected basis (exp(pred_linear))
 # Derivative is w.r.t to β on the linear basis
 ###################################
-function update_∇!(::Type{Gamma}, ∇¹, ∇², x, y, p, w, feat)
+function update_∇!(::Type{GammaDev}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
         ∇1 += 2 * (1 - y[i] / p[i]) * x[i, feat] * w[i]
@@ -112,7 +112,7 @@ function update_∇!(::Type{Gamma}, ∇¹, ∇², x, y, p, w, feat)
     ∇²[feat] = ∇2
     return nothing
 end
-function update_∇_bias!(::Type{Gamma}, ∇_bias, x, y, p, w)
+function update_∇_bias!(::Type{GammaDev}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
         ∇1 += 2 * (1 - y[i] / p[i]) * w[i]
@@ -130,7 +130,7 @@ end
 # The prediction p is assumed to be on the projected basis (exp(pred_linear))
 # Derivative is w.r.t to β on the linear basis
 ###################################
-function update_∇!(::Type{Tweedie}, ∇¹, ∇², x, y, p, w, feat)
+function update_∇!(::Type{TweedieDev}, ∇¹, ∇², x, y, p, w, feat)
     rho = eltype(p)(1.5)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
@@ -141,7 +141,7 @@ function update_∇!(::Type{Tweedie}, ∇¹, ∇², x, y, p, w, feat)
     ∇²[feat] = ∇2
     return nothing
 end
-function update_∇_bias!(::Type{Tweedie}, ∇_bias, x, y, p, w)
+function update_∇_bias!(::Type{TweedieDev}, ∇_bias, x, y, p, w)
     rho = eltype(p)(1.5)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)

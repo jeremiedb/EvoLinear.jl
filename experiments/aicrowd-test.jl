@@ -50,7 +50,7 @@ config = EvoLinearRegressor(
     L1=0.0,
     L2=0.0,
     nrounds=1000,
-    eta=0.2,
+    eta=0.5,
 )
 
 # @time m = fit_evotree(config; x_train, y_train, print_every_n=25);
@@ -92,12 +92,22 @@ p_spline = m(x_eval')
 # p_spline = m(x_eval' |> EvoLinear.Splines.gpu) |> EvoLinear.Splines.cpu
 EvoLinear.Metrics.logloss(p_spline, y_eval)
 
+
+######################################################
+# XGBoost
+######################################################
+x_train = Matrix(dtrain[:, feature_names])
+y_train = dtrain[:, target_name]
+
+x_eval = Matrix(deval[:, feature_names])
+y_eval = deval[:, target_name]
+
 params_xgb = Dict(
     :objective => "reg:logistic",
     :booster => "gbtree",
     :eta => 0.05,
     :max_depth => 4,
-    :lambda => 10.0,
+    :lambda => 1.0,
     :gamma => 0.0,
     :subsample => 0.5,
     :colsample_bytree => 0.8,
@@ -113,15 +123,15 @@ num_round = 250
 metric_xgb = "logloss"
 
 @info "xgboost train:"
-dtrain = DMatrix(x_train, y_train)
 watchlist = Dict("eval" => DMatrix(x_eval, y_eval))
 @time m_xgb = xgboost(
-    dtrain;
+    (x_train, y_train);
     watchlist,
     num_round,
-    nthread=nthread,
+    nthread,
     verbosity=0,
     eval_metric=metric_xgb,
+    early_stopping_rounds=10,
     params_xgb...,
 );
 p_xgb_tree = XGBoost.predict(m_xgb, x_eval)
@@ -135,21 +145,16 @@ params_xgb = Dict(
     :print_every_n => 5,
 )
 
-nthread = Threads.nthreads()
-nthread = 8
-
-nrounds = 250
-metrics = ["logloss"]
-
 @info "xgboost train:"
 @time m_xgb = xgboost(
-    x_train,
-    nrounds,
-    label=y_train,
-    param=params_xgb,
-    metrics=metrics,
-    nthread=nthread,
-    silent=1,
+    (x_train, y_train);
+    watchlist,
+    num_round,
+    eval_metric=metric_xgb,
+    early_stopping_rounds=10,
+    nthread,
+    verbosity=0,
+    params_xgb...,
 );
 p_xgb_linear = XGBoost.predict(m_xgb, x_eval)
 
