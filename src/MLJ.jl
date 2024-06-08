@@ -6,15 +6,6 @@ function MMI.fit(model::EvoLinearRegressor, verbosity::Int, A, y)
     report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
     return fitresult, cache, report
 end
-function MMI.fit(model::EvoSplineRegressor, verbosity::Int, A, y)
-    fitresult, cache = EvoLinear.Splines.init(model, A.matrix, y)
-    while cache[:info][:nrounds] < model.nrounds
-        fit!(fitresult, cache)
-    end
-    report = nothing
-    # report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
-    return fitresult, cache, report
-end
 
 function okay_to_continue(model, fitresult, cache)
     return model.nrounds - cache[:info][:nrounds] >= 0 &&
@@ -32,25 +23,9 @@ function MMI.update(model::EvoLinearRegressor, verbosity::Integer, fitresult, ca
     end
     return fitresult, cache, report
 end
-function MMI.update(model::EvoSplineRegressor, verbosity::Integer, fitresult, cache, A, y)
-    if okay_to_continue(model, fitresult, cache)
-        while cache[:info][:nrounds] < model.nrounds
-            fit!(fitresult, cache)
-        end
-        # report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
-        report = nothing
-    else
-        fitresult, cache, report = fit(model, verbosity, A, y)
-    end
-    return fitresult, cache, report
-end
 
 function predict(::EvoLinearRegressor, fitresult, A)
     pred = fitresult(A.matrix)
-    return pred
-end
-function predict(::EvoSplineRegressor, fitresult, A)
-    pred = fitresult(A.matrix')
     return pred
 end
 
@@ -73,7 +48,7 @@ MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
 
 # Metadata
 MMI.metadata_pkg.(
-    (EvoLinearRegressor, EvoSplineRegressor),
+    (EvoLinearRegressor),
     name = "EvoLinear",
     uuid = "ab853011-1780-437f-b4b5-5de6f4777246",
     url = "https://github.com/jeremiedb/EvoLinear.jl",
@@ -91,15 +66,4 @@ MMI.metadata_model(
     target_scitype = AbstractVector{<:MMI.Continuous},
     weights = false,
     path = "EvoLinear.EvoLinearRegressor",
-)
-
-MMI.metadata_model(
-    EvoSplineRegressor,
-    input_scitype = Union{
-        MMI.Table(MMI.Continuous, MMI.Count, MMI.OrderedFactor),
-        AbstractMatrix{MMI.Continuous},
-    },
-    target_scitype = AbstractVector{<:MMI.Continuous},
-    weights = false,
-    path = "EvoLinear.EvoSplineRegressor",
 )

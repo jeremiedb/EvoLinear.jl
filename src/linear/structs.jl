@@ -1,3 +1,5 @@
+const EvoLinearTypes = Union{EvoLinearRegressor}
+
 mutable struct EvoLinearRegressor{L} <: MMI.Deterministic
     updater::Symbol
     nrounds::Int
