@@ -1,26 +1,23 @@
-mutable struct EvoSplineRegressor{L,T} <: MMI.Deterministic
+mutable struct EvoLinearRegressor{L} <: MMI.Deterministic
+    updater::Symbol
     nrounds::Int
-    opt::Symbol
-    batchsize::Int
-    act::Symbol
-    eta::T
-    L2::T
-    knots::Union{Dict,Nothing}
-    rng::Any
-    device::Symbol
+    eta::Float32
+    L1::Float32
+    L2::Float32
+    rng
 end
 
-
 """
-    EvoSplineRegressor(; kwargs...)
+    EvoLinearRegressor(; kwargs...)
 
 
-A model type for constructing a EvoSplineRegressor, based on [EvoLinear.jl](https://github.com/jeremiedb/EvoLinear.jl), and implementing both an internal API and the MLJ model interface.
+A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](https://github.com/jeremiedb/EvoLinear.jl), and implementing both an internal API and the MLJ model interface.
 
 # Keyword arguments
 
 - `loss=:mse`: loss function to be minimised. 
     Can be one of:
+    
     - `:mse`
     - `:logistic`
     - `:poisson`
@@ -37,11 +34,11 @@ A model type for constructing a EvoSplineRegressor, based on [EvoLinear.jl](http
 
 # Internal API
 
-Do `config = EvoSplineRegressor()` to construct an hyper-parameter struct with default hyper-parameters.
+Do `config = EvoLinearRegressor()` to construct an hyper-parameter struct with default hyper-parameters.
 Provide keyword arguments as listed above to override defaults, for example:
 
 ```julia
-EvoSplineRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
+EvoLinearRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
 ```
 
 ## Training model
@@ -49,7 +46,7 @@ EvoSplineRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
 A model is built using [`fit`](@ref):
 
 ```julia
-config = EvoSplineRegressor()
+config = EvoLinearRegressor()
 m = fit(config; x, y, w)
 ```
 
@@ -66,11 +63,11 @@ preds = m(x)
 From MLJ, the type can be imported using:
 
 ```julia
-EvoSplineRegressor = @load EvoSplineRegressor pkg=EvoLinear
+EvoLinearRegressor = @load EvoLinearRegressor pkg=EvoLinear
 ```
 
 Do `model = EvoLinearRegressor()` to construct an instance with default hyper-parameters.
-Provide keyword arguments to override hyper-parameter defaults, as in `EvoSplineRegressor(loss=...)`.
+Provide keyword arguments to override hyper-parameter defaults, as in `EvoLinearRegressor(loss=...)`.
 
 ## Training model
 
@@ -95,7 +92,7 @@ Train the machine using `fit!(mach, rows=...)`.
 
 The fields of `fitted_params(mach)` are:
 
-- `:fitresult`: the `SplineModel` object returned by EvoSplineRegressor fitting algorithm.
+- `:fitresult`: the `EvoLinearModel` object returned by EvoLnear.jl fitting algorithm.
 
 ## Report
 
@@ -106,32 +103,26 @@ The fields of `report(mach)` are:
 - `:names`: Names of each of the features.
 
 """
-function EvoSplineRegressor(; kwargs...)
+function EvoLinearRegressor(; kwargs...)
 
     # defaults arguments
     args = Dict{Symbol,Any}(
         :loss => :mse,
+        :updater => :all,
         :nrounds => 10,
-        :opt => :Adam,
-        :batchsize => 1024,
-        :act => :relu,
-        :eta => 1e-3,
-        :L2 => 0.0,
-        :knots => nothing,
-        :rng => 123,
-        :device => :cpu,
-        :T => Float32,
+        :eta => 1,
+        :L1 => 0,
+        :L2 => 0,
+        :rng => 123
     )
 
     args_ignored = setdiff(keys(kwargs), keys(args))
     args_ignored_str = join(args_ignored, ", ")
-    length(args_ignored) > 0 &&
-        @info "Following $(length(args_ignored)) provided arguments will be ignored: $(args_ignored_str)."
+    length(args_ignored) > 0 && @info "Following $(length(args_ignored)) provided arguments will be ignored: $(args_ignored_str)."
 
     args_default = setdiff(keys(args), keys(kwargs))
     args_default_str = join(args_default, ", ")
-    length(args_default) > 0 &&
-        @info "Following $(length(args_default)) arguments were not provided and will be set to default: $(args_default_str)."
+    length(args_default) > 0 && @info "Following $(length(args_default)) arguments were not provided and will be set to default: $(args_default_str)."
 
     args_override = intersect(keys(args), keys(kwargs))
     for arg in args_override
@@ -139,20 +130,28 @@ function EvoSplineRegressor(; kwargs...)
     end
 
     args[:rng] = mk_rng(args[:rng])
-    T = args[:T]
-    L = loss_types[Symbol(args[:loss])]
+    L = loss_types[args[:loss]]
 
-    model = EvoSplineRegressor{L,T}(
+    model = EvoLinearRegressor{L}(
+        args[:updater],
         args[:nrounds],
-        Symbol(args[:opt]),
-        args[:batchsize],
-        Symbol(args[:act]),
-        args[:T](args[:eta]),
-        args[:T](args[:L2]),
-        args[:knots],
-        args[:rng],
-        Symbol(args[:device]),
-    )
+        args[:eta],
+        args[:L1],
+        args[:L2],
+        args[:rng])
 
     return model
 end
+
+mutable struct EvoLinearModel{L<:Loss,A,B}
+    loss::Type{L}
+    coef::A
+    bias::B
+    info::Dict{Symbol,Any}
+end
+EvoLinearModel(loss::Type{<:Loss}; coef, bias, info) = EvoLinearModel(loss, coef, bias, info)
+EvoLinearModel(loss::Symbol; coef, bias, info) = EvoLinearModel(loss_types[loss]; coef, bias, info)
+get_loss_type(m::EvoLinearModel) = m.loss
+get_loss_type(::EvoLinearRegressor{L}) where {L} = L
+
+const EvoLinearTypes = Union{EvoLinearRegressor}
