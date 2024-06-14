@@ -115,7 +115,7 @@ end
     y_train = exp.(x_train * coef .+ rand(T, nobs) * T(0.1))
     w = ones(T, nobs)
 
-    config = EvoLinearRegressor(nrounds=10, loss=:poisson, L1=1e-2, L2=1e-3)
+    config = EvoLinearRegressor(nrounds=10, loss=:poisson_deviance, L1=1e-2, L2=1e-3)
     m = EvoLinear.fit(config; x_train, y_train, metric=:poisson_deviance)
     p = m(x_train)
 
@@ -139,7 +139,7 @@ end
     y_train = exp.(x_train * coef .+ rand(T, nobs) * T(0.1))
     w = ones(T, nobs)
 
-    config = EvoLinearRegressor(nrounds=10, loss=:gamma, L1=1e-2, L2=1e-3)
+    config = EvoLinearRegressor(nrounds=10, loss=:gamma_deviance, L1=1e-2, L2=1e-3)
     m = EvoLinear.fit(config; x_train, y_train, metric=:gamma_deviance)
     p = m(x_train)
 
@@ -163,7 +163,7 @@ end
     y_train = exp.(x_train * coef .+ rand(T, nobs) * T(0.1))
     w = ones(T, nobs)
 
-    config = EvoLinearRegressor(nrounds=10, loss=:tweedie, L1=1e-2, L2=1e-3)
+    config = EvoLinearRegressor(nrounds=10, loss=:tweedie_deviance, L1=1e-2, L2=1e-3)
     m = EvoLinear.fit(config; x_train, y_train, metric=:tweedie_deviance)
     p = m(x_train)
 
