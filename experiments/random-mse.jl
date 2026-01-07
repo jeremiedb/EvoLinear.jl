@@ -1,4 +1,3 @@
-using Revise
 using DataFrames
 using EvoLinear
 using BenchmarkTools
@@ -22,12 +21,13 @@ eval_idx = setdiff(1:nobs, train_idx)
 dtrain = dtot[train_idx, :]
 deval = dtot[eval_idx, :]
 
-config = EvoLinearRegressor(nrounds=100, loss=:mse, eta=0.1, L1=0e-1, L2=1)
+config = EvoLinearRegressor(nrounds=100, loss=:mse, eta=0.3, L1=0e-1, L2=1)
 # @time m = EvoLinear.fit(config, dtrain; target_name, feature_names);
 @time m = EvoLinear.fit(config, dtrain; target_name, feature_names, deval=dtrain, metric=:mae, print_every_n=5);
 # @time m, logger = EvoLinear.fit(config; x_train, y_train, metric=:mae, x_eval = x_train, y_eval = y_train, print_every_n = 5, return_logger = true);
 # @btime m, logger = EvoLinear.fit(config; x_train, y_train, metric=:mae, x_eval = x_train, y_eval = y_train, print_every_n = 5, return_logger = true);
 sum(m.coef .== 0)
+m.info[:logger][:nrounds]
 
 config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 # @btime m = EvoLinear.fit(config; x_train, y_train);
@@ -36,10 +36,11 @@ config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 @time EvoLinear.fit!(m0, cache, config);
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
 @code_warntype EvoLinear.fit!(m0, cache, config)
-logger[:nrounds]
 
-p = EvoLinear.Linear.predict_proj(m, x_train)
-@btime m($x_train);
+
+p = EvoLinear.predict(m, dtrain)
+@time m(dtrain);
+@btime m($dtrain);
 
 @btime metric = EvoLinear.Metrics.mse(p, cache.y)
 @btime metric = EvoLinear.Metrics.mse(p, cache.y, cache.w)

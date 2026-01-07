@@ -1,9 +1,10 @@
-function MMI.fit(model::EvoLinearRegressor, verbosity::Int, A, y)
-    fitresult, cache = init(model, A.matrix, y)
+function MMI.fit(model::EvoLinearRegressor, verbosity::Int, A, y, w=nothing)
+    A = isa(A, AbstractMatrix) ? Tables.columntable(Tables.table(A)) : Tables.columntable(A)
+    fitresult, cache = init(model, A, y)
     while cache[:info][:nrounds] < model.nrounds
         fit!(fitresult, cache, model)
     end
-    report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
+    report = (coef=fitresult.coef, bias=fitresult.bias, names=A.names)
     return fitresult, cache, report
 end
 
@@ -17,7 +18,7 @@ function MMI.update(model::EvoLinearRegressor, verbosity::Integer, fitresult, ca
         while cache[:info][:nrounds] < model.nrounds
             fit!(fitresult, cache, model)
         end
-        report = (coef = fitresult.coef, bias = fitresult.bias, names = A.names)
+        report = (coef=fitresult.coef, bias=fitresult.bias, names=A.names)
     else
         fitresult, cache, report = fit(model, verbosity, A, y)
     end
@@ -31,17 +32,17 @@ end
 
 # Generate names to be used by feature_importances in the report
 MMI.reformat(::EvoLinearTypes, X, y) =
-    ((matrix = MMI.matrix(X), names = [name for name ∈ schema(X).names]), y)
+    ((matrix=MMI.matrix(X), names=[name for name ∈ schema(X).names]), y)
 MMI.reformat(::EvoLinearTypes, X) =
-    ((matrix = MMI.matrix(X), names = [name for name ∈ schema(X).names]),)
+    ((matrix=MMI.matrix(X), names=[name for name ∈ schema(X).names]),)
 MMI.reformat(::EvoLinearTypes, X::AbstractMatrix, y) =
-    ((matrix = X, names = ["feat_$i" for i = 1:size(X, 2)]), y)
+    ((matrix=X, names=["feat_$i" for i = 1:size(X, 2)]), y)
 MMI.reformat(::EvoLinearTypes, X::AbstractMatrix) =
-    ((matrix = X, names = ["feat_$i" for i = 1:size(X, 2)]),)
+    ((matrix=X, names=["feat_$i" for i = 1:size(X, 2)]),)
 MMI.selectrows(::EvoLinearTypes, I, A, y) =
-    ((matrix = view(A.matrix, I, :), names = A.names), view(y, I))
+    ((matrix=view(A.matrix, I, :), names=A.names), view(y, I))
 MMI.selectrows(::EvoLinearTypes, I, A) =
-    ((matrix = view(A.matrix, I, :), names = A.names),)
+    ((matrix=view(A.matrix, I, :), names=A.names),)
 
 # For EarlyStopping.jl supportm
 MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
@@ -49,21 +50,20 @@ MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
 # Metadata
 MMI.metadata_pkg.(
     (EvoLinearRegressor),
-    name = "EvoLinear",
-    uuid = "ab853011-1780-437f-b4b5-5de6f4777246",
-    url = "https://github.com/jeremiedb/EvoLinear.jl",
-    julia = true,
-    license = "MIT",
-    is_wrapper = false,
+    name="EvoLinear",
+    uuid="ab853011-1780-437f-b4b5-5de6f4777246",
+    url="https://github.com/jeremiedb/EvoLinear.jl",
+    julia=true,
+    license="MIT",
+    is_wrapper=false,
 )
 
 MMI.metadata_model(
     EvoLinearRegressor,
-    input_scitype = Union{
+    input_scitype=Union{
         MMI.Table(MMI.Continuous, MMI.Count, MMI.OrderedFactor),
-        AbstractMatrix{MMI.Continuous},
     },
-    target_scitype = AbstractVector{<:MMI.Continuous},
-    weights = false,
-    path = "EvoLinear.EvoLinearRegressor",
+    target_scitype=AbstractVector{<:MMI.Continuous},
+    weights=false,
+    path="EvoLinear.EvoLinearRegressor",
 )

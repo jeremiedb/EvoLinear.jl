@@ -11,9 +11,9 @@
     y_train = x_train * coef .+ rand(T, nobs) * T(0.1)
 
     config = EvoLinearRegressor(nrounds=10, loss=:mse, L1=0, L2=1)
-    m = EvoLinear.Linear.EvoLinearModel(:mse; coef=rand(3), bias=rand())
-    m = EvoLinear.Linear.EvoLinearModel(:mse; coef=rand(Float32, 3), bias=rand(Float32))
-    m = EvoLinear.Linear.EvoLinearModel(EvoLinear.Linear.loss_types[:mse]; coef=rand(3), bias=rand())
+    m = EvoLinear.EvoLinearModel(:mse; coef=rand(3), bias=rand(), info=Dict{Symbol,Any}())
+    m = EvoLinear.EvoLinearModel(:mse; coef=rand(Float32, 3), bias=rand(Float32), info=Dict{Symbol,Any}())
+    m = EvoLinear.EvoLinearModel(EvoLinear.loss_types[:mse]; coef=rand(3), bias=rand(), info=Dict{Symbol,Any}())
 
 end
 
@@ -31,7 +31,7 @@ end
 
     config = EvoLinearRegressor(nrounds=10, loss=:mse, L1=0, L2=1)
     m0 = EvoLinear.fit(config; x_train, y_train, metric=:mse)
-    m1, cache = EvoLinear.Linear.init(config, x_train, y_train)
+    m1, cache = EvoLinear.init(config, x_train, y_train)
     for i = 1:config.nrounds
         EvoLinear.fit!(m1, cache, config)
     end
@@ -91,7 +91,7 @@ end
     m = EvoLinear.fit(config; x_train, y_train, metric=:logloss)
 
     p = m(x_train)
-    p1 = EvoLinear.Linear.predict_proj(m, x_train)
+    p1 = EvoLinear.predict(m, x_train)
 
     @test all(p .== p1)
 

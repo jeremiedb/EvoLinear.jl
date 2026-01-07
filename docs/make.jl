@@ -19,9 +19,9 @@ makedocs(;
     ]
 )
 
-deploydocs(
+DocumenterVitepress.deploydocs(
     repo="github.com/jeremiedb/EvoLinear.jl",
-    target="build", # this is where Vitepress stores its output
+    target=joinpath(@__DIR__, "build"),
     branch="gh-pages",
     devbranch="main",
     push_preview=true

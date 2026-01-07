@@ -1,4 +1,3 @@
-using Revise
 using CSV
 using DataFrames
 using EvoLinear
