@@ -4,13 +4,18 @@
 
 ```@docs
 EvoLinearRegressor
-EvoSplineRegressor
 ```
 
 ## Training
 
 ```@docs
 EvoLinear.fit
+```
+
+## Inference
+
+```@docs
+EvoLinear.predict
 ```
 
 ## Metrics

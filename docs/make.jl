@@ -1,27 +1,28 @@
 using Documenter
+using DocumenterVitepress
 using EvoLinear
 
-makedocs(
+makedocs(;
     sitename="EvoLinear.jl",
     authors="Jeremie Desgagne-Bouchard",
     modules=[EvoLinear],
+    format=DocumenterVitepress.MarkdownVitepress(
+        repo="github.com/jeremiedb/EvoLinear.jl",
+        devbranch="main",
+        devurl="dev"
+    ),
     pages=[
         "Home" => "index.md",
         "API" => "api.md",
-        "Internals" => "internals.md",
     ],
-    format=Documenter.HTML(
-        sidebar_sitename=true,
-        edit_link="main",
-        assets=["assets/style.css"]
-    )
+    warnonly=true,
+    checkdocs=:all,
 )
 
-# Documenter can also automatically deploy documentation to gh-pages.
-# See "Hosting Documentation" and deploydocs() in the Documenter manual
-# for more information.
-deploydocs(
-    repo="github.com/jeremiedb/EvoLinear.jl.git",
-    target="build",
-    devbranch="main"
+DocumenterVitepress.deploydocs(
+    repo="github.com/jeremiedb/EvoLinear.jl",
+    target=joinpath(@__DIR__, "build"),
+    branch="gh-pages",
+    devbranch="main",
+    push_preview=true
 )

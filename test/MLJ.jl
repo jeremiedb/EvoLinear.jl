@@ -16,7 +16,7 @@ X = MLJBase.table(X)
 # linear regression
 model = EvoLinearRegressor(loss=:mse, nrounds=10)
 # logistic regression
-model = EvoLinearRegressor(loss=:logistic, nrounds=4)
+model = EvoLinearRegressor(loss=:logloss, nrounds=4)
 
 mach = machine(model, X, y)
 train, test = partition(eachindex(y), 0.7, shuffle=true); # 70:30 split
@@ -24,7 +24,7 @@ fit!(mach, rows=train, verbosity=1)
 
 mach.model.nrounds += 2
 fit!(mach, rows=train, verbosity=1)
-mach.cache[:info][:nrounds]
+mach.fitresult.info[:nrounds]
 
 # predict on train data
 pred_train = predict(mach, selectrows(X, train))
@@ -37,39 +37,6 @@ mean(abs.(pred_test - selectrows(Y, test)))
 @test MLJBase.iteration_parameter(EvoLinearRegressor) == :nrounds
 
 
-##################################################
-### Regression - matrix data
-##################################################
-X = MLJBase.matrix(X)
-model = EvoLinearRegressor(loss=:logistic, nrounds=4)
-
-mach = machine(model, X, y)
-train, test = partition(eachindex(y), 0.7, shuffle=true); # 70:30 split
-fit!(mach, rows=train, verbosity=1)
-
-mach.model.nrounds += 2
-fit!(mach, rows=train, verbosity=1)
-
-pred_train = predict(mach, selectrows(X, train))
-mean(abs.(pred_train - selectrows(Y, train)))
-
-##################################################
-### SplineRegressor
-##################################################
-X = MLJBase.matrix(X)
-model = EvoSplineRegressor(loss=:mse, nrounds=20, knots = Dict(1 => 4))
-
-mach = machine(model, X, y)
-train, test = partition(eachindex(y), 0.7, shuffle=true); # 70:30 split
-fit!(mach, rows=train, verbosity=1)
-
-mach.model.nrounds += 10
-fit!(mach, rows=train, verbosity=1)
-
-pred_train = predict(mach, selectrows(X, train))
-mean(abs.(pred_train - selectrows(Y, train)))
-
-
 ####################################################################################
 # tests that `update` handles data correctly in the case of a cold restart:
 ####################################################################################
@@ -78,11 +45,11 @@ y = rand(5)
 model = EvoLinearRegressor(loss=:mse)
 data = MLJBase.reformat(model, X, y);
 f, c, r = MLJBase.fit(model, 2, data...);
-c[:info]
+f.info
 model.L2 = 0.1
 model.nrounds += 2
 MLJBase.update(model, 2, f, c, data...)
-c[:info][:nrounds]
+f.info[:nrounds]
 
 X = rand(5, 2)
 y = rand(5)

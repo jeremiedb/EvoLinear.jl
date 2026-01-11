@@ -1,14 +1,14 @@
-const EvoLinearTypes = Union{EvoLinearRegressor}
-
-mutable struct EvoLinearRegressor{L} <: MMI.Deterministic
+mutable struct EvoLinearRegressor <: MMI.Deterministic
+    loss::Symbol
+    metric::Symbol
     updater::Symbol
     nrounds::Int
     eta::Float32
     L1::Float32
     L2::Float32
-    rng
+    early_stopping_rounds::Int
+    seed::Int
 end
-
 
 """
     EvoLinearRegressor(; kwargs...)
@@ -20,28 +20,35 @@ A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](http
 
 - `loss=:mse`: loss function to be minimised. 
     Can be one of:
-    
+
     - `:mse`
-    - `:logistic`
+    - `:logloss`
     - `:poisson`
     - `:gamma`
     - `:tweedie`
-
+- `metric`:     The evaluation metric used to track evaluation data and serves as a basis for early stopping. Supported metrics are: 
+  - `:mse`:     Mean-squared error. Adapted for general regression models.
+  - `:rmse`:    Root-mean-squared error. Adapted for general regression models.
+  - `:mae`:     Mean absolute error. Adapted for general regression models.
+  - `:logloss`: Adapted for `:logistic` regression models.
+  - `:poisson`: Poisson deviance. Adapted to `EvoTreeCount` count models.
+  - `:gamma`:   Gamma deviance. Adapted to regression problem on Gamma like, positively distributed targets.
+  - `:tweedie`: Tweedie deviance. Adapted to regression problem on Tweedie like, positively distributed targets with probability mass at `y == 0`.
 - `nrounds=10`: maximum number of training rounds.
 - `eta=1`: Learning rate. Typically in the range `[1e-2, 1]`.
 - `L1=0`: Regularization penalty applied by shrinking to 0 weight update if update is < L1. No penalty if update > L1. Results in sparse feature selection. Typically in the `[0, 1]` range on normalized features.
 - `L2=0`: Regularization penalty applied to the squared of the weight update value. Restricts large parameter values. Typically in the `[0, 1]` range on normalized features.
-- `rng=123`: random seed. Not used at the moment.
+- `seed::Int=123`: random seed.
 - `updater=:all`: training method. Only `:all` is supported at the moment. Gradients for each feature are computed simultaneously, then bias is updated based on all features update. 
 - `device=:cpu`: Only `:cpu` is supported at the moment.
 
 # Internal API
 
-Do `config = EvoLinearRegressor()` to construct an hyper-parameter struct with default hyper-parameters.
+Use `config = EvoLinearRegressor()` to construct an hyper-parameter struct with default hyper-parameters.
 Provide keyword arguments as listed above to override defaults, for example:
 
 ```julia
-EvoLinearRegressor(loss=:logistic, L1=1e-3, L2=1e-2, nrounds=100)
+EvoLinearRegressor(loss=:logloss, L1=1e-3, L2=1e-2, nrounds=100)
 ```
 
 ## Training model
@@ -50,7 +57,7 @@ A model is built using [`fit`](@ref):
 
 ```julia
 config = EvoLinearRegressor()
-m = fit(config; x, y, w)
+m = fit(config, date; feature_names, target_name)
 ```
 
 ## Inference
@@ -111,37 +118,51 @@ function EvoLinearRegressor(; kwargs...)
     # defaults arguments
     args = Dict{Symbol,Any}(
         :loss => :mse,
+        :metric => nothing,
         :updater => :all,
         :nrounds => 10,
         :eta => 1,
         :L1 => 0,
         :L2 => 0,
-        :rng => 123
+        :early_stopping_rounds => typemax(Int),
+        :seed => 123
     )
 
     args_ignored = setdiff(keys(kwargs), keys(args))
-    args_ignored_str = join(args_ignored, ", ")
-    length(args_ignored) > 0 && @info "Following $(length(args_ignored)) provided arguments will be ignored: $(args_ignored_str)."
-
-    args_default = setdiff(keys(args), keys(kwargs))
-    args_default_str = join(args_default, ", ")
-    length(args_default) > 0 && @info "Following $(length(args_default)) arguments were not provided and will be set to default: $(args_default_str)."
+    length(args_ignored) > 0 &&
+        @info "The following kwargs are not supported and will be ignored: $(args_ignored)."
 
     args_override = intersect(keys(args), keys(kwargs))
     for arg in args_override
         args[arg] = kwargs[arg]
     end
 
-    args[:rng] = mk_rng(args[:rng])
-    L = loss_types[args[:loss]]
+    _loss_list = [:mse, :logloss, :poisson, :gamma, :tweedie]
+    loss = Symbol(args[:loss])
+    if loss ∉ _loss_list
+        error("Invalid loss. Must be one of: $_loss_list")
+    end
 
-    model = EvoLinearRegressor{L}(
+    _metric_list = [:mse, :rmse, :mae, :logloss, :poisson, :gamma, :tweedie]
+    if isnothing(args[:metric])
+        metric = loss
+    else
+        metric = Symbol(args[:metric])
+    end
+    if metric ∉ _metric_list
+        error("Invalid metric. Must be one of: $_metric_list")
+    end
+
+    model = EvoLinearRegressor(
+        loss,
+        metric,
         args[:updater],
         args[:nrounds],
         args[:eta],
         args[:L1],
         args[:L2],
-        args[:rng])
+        args[:early_stopping_rounds],
+        args[:seed])
 
     return model
 end
@@ -154,46 +175,5 @@ mutable struct EvoLinearModel{L<:Loss,A,B}
 end
 EvoLinearModel(loss::Type{<:Loss}; coef, bias, info) = EvoLinearModel(loss, coef, bias, info)
 EvoLinearModel(loss::Symbol; coef, bias, info) = EvoLinearModel(loss_types[loss]; coef, bias, info)
-get_loss_type(m::EvoLinearModel) = m.loss
-get_loss_type(::EvoLinearRegressor{L}) where {L} = L
 
-function (m::EvoLinearModel{L})(x::AbstractMatrix; proj::Bool=true) where {L}
-    p = x * m.coef .+ m.bias
-    proj ? proj!(L, p) : nothing
-    return p
-end
-function (m::EvoLinearModel{L})(p::AbstractVector, x::AbstractMatrix; proj::Bool=true) where {L}
-    p .= x * m.coef .+ m.bias
-    proj ? proj!(L, p) : nothing
-    return nothing
-end
-function (m::EvoLinearModel{L})(data; proj::Bool=true) where {L}
-
-    Tables.istable(data) || error("data must be Table compatible")
-
-    T = Float32
-    feature_names = m.info[:feature_names]
-    nobs = Tables.DataAPI.nrow(data)
-    nfeats = length(feature_names)
-
-    x = zeros(T, nobs, nfeats)
-    @threads for j in axes(x, 2)
-        @views x[:, j] .= Tables.getcolumn(data, feature_names[j])
-    end
-
-    p = x * m.coef .+ m.bias
-    proj ? proj!(L, p) : nothing
-    return p
-end
-
-function proj!(::L, p) where {L<:Type{MSE}}
-    return nothing
-end
-function proj!(::L, p) where {L<:Type{Logistic}}
-    p .= sigmoid.(p)
-    return nothing
-end
-function proj!(::L, p) where {L<:Union{Type{Poisson},Type{Gamma},Type{Tweedie}}}
-    p .= exp.(p)
-    return nothing
-end
+const EvoLinearTypes = Union{EvoLinearRegressor}

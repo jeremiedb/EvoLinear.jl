@@ -32,6 +32,22 @@ function mse(p, y, w)
 end
 
 """
+    rmse(p, y)
+    rmse(p, y, w)
+
+Root-Mean squared error evaluation metric.
+
+# Arguments
+
+- `p`: predicted value.
+- `y`: observed target variable.
+- `w`: vector of weights
+"""
+rmse(p, y) = sqrt(mse(p, y))
+rmse(p, y, w) = sqrt(mse(p, y, w))
+
+
+"""
     mae(p, y)
     mae(p, y, w)
 
@@ -178,14 +194,16 @@ end
 
 const metric_dict = Dict(
     :mse => mse,
+    :rmse => rmse,
     :mae => mae,
     :logloss => logloss,
-    :poisson_deviance => poisson_deviance,
-    :gamma_deviance => gamma_deviance,
-    :tweedie_deviance => tweedie_deviance
+    :poisson => poisson_deviance,
+    :gamma => gamma_deviance,
+    :tweedie => tweedie_deviance
 )
 
 is_maximise(::typeof(mse)) = false
+is_maximise(::typeof(rmse)) = false
 is_maximise(::typeof(mae)) = false
 is_maximise(::typeof(logloss)) = false
 is_maximise(::typeof(poisson_deviance)) = false
