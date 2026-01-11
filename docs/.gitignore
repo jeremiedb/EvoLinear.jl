@@ -1,2 +1,11 @@
 build/
 site/
+src/.vitepress/cache
+src/.vitepress/dist
+Manifest.toml
+.vscode
+node_modules
+.vitepress/cache
+.vitepress/dist
+.DS_Store
+package-lock.json

@@ -39,8 +39,8 @@ target_name = "target"
 
 ## Training
 
-Now we are ready to train our model. We first define a model configuration using the [`NeuroTreeRegressor`](@ref) model constructor. 
-Then, we use [`NeuroTreeModels.fit`](@ref) to train a boosted tree model. We pass the optional `deval` argument to enable the usage of early stopping. 
+Now we are ready to train our model. We first define a model configuration using the [`EvoLinearRegressor`](@ref) model constructor. 
+Then, we use [`EvoLinear.fit`](@ref) to train a boosted tree model. We pass the optional `deval` argument to enable the usage of early stopping. 
 
 ```julia
 config = EvoLinearRegressor(

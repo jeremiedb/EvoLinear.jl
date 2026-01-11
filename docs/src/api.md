@@ -12,6 +12,12 @@ EvoLinearRegressor
 EvoLinear.fit
 ```
 
+## Inference
+
+```@docs
+EvoLinear.predict
+```
+
 ## Metrics
 
 ```@autodocs
