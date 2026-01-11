@@ -37,6 +37,12 @@ function (m::EvoLinearModel{L})(data; proj::Bool=true) where {L}
     return p
 end
 
+
+"""
+    proj!(::L, p)
+
+Performs a reprojection from raw linear basis to loss-specific actual prediction.
+"""
 function proj!(::L, p) where {L<:Type{MSE}}
     return nothing
 end
