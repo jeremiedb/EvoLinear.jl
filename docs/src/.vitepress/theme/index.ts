@@ -1,19 +1,19 @@
 // .vitepress/theme/index.ts
 import { h } from 'vue'
-import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
-
+import type { Theme as ThemeConfig } from 'vitepress'
+import VersionPicker from "../../components/VersionPicker.vue"
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 import './style.css'
 
-export default {
+export const Theme: ThemeConfig = {
   extends: DefaultTheme,
   Layout() {
-    return h(DefaultTheme.Layout, null, {
-      // https://vitepress.dev/guide/extending-default-theme#layout-slots
-    })
+    return h(DefaultTheme.Layout)
   },
   enhanceApp({ app, router, siteData }) {
-    enhanceAppWithTabs(app)
+    enhanceAppWithTabs(app);
+    app.component('VersionPicker', VersionPicker);
   }
-} satisfies Theme
+}
+export default Theme

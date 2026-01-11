@@ -1,5 +1,5 @@
 using Documenter
-using DocumenterVitePress
+using DocumenterVitepress
 using EvoLinear
 
 makedocs(;
@@ -11,12 +11,12 @@ makedocs(;
         devbranch="main",
         devurl="dev"
     ),
-    warnonly=true,
-    checkdocs=:all,
     pages=[
         "Home" => "index.md",
         "API" => "api.md",
-    ]
+    ],
+    warnonly=true,
+    checkdocs=:all,
 )
 
 DocumenterVitepress.deploydocs(

@@ -4,7 +4,6 @@
 
 ```@docs
 EvoLinearRegressor
-EvoSplineRegressor
 ```
 
 ## Training
