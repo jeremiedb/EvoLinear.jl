@@ -40,7 +40,6 @@ transform!(df, :Age => (x -> coalesce.(x, median(skipmissing(x)))) => :Age);
 
 # remove unneeded variables
 df = df[:, Not([:PassengerId, :Name, :Embarked, :Cabin, :Ticket])]
-
 ```
 
 The full data can now be split according to train and eval indices. 
@@ -64,10 +63,11 @@ Then, we use [`NeuroTreeModels.fit`](@ref) to train a boosted tree model. We pas
 
 ```julia
 config = EvoLinearRegressor(
-    loss=:logistic,
+    loss=:logloss,
     nrounds=2000,
     L2=0.1,
     eta=1e-1,
+    early_stopping_rounds=10,
 )
 
 m = EvoLinear.fit(
@@ -76,9 +76,7 @@ m = EvoLinear.fit(
     deval,
     target_name,
     feature_names,
-    metric=:logloss,
     print_every_n=100,
-    early_stopping_rounds=10,
 )
 ```
 

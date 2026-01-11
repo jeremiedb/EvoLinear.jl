@@ -180,9 +180,9 @@ const metric_dict = Dict(
     :mse => mse,
     :mae => mae,
     :logloss => logloss,
-    :poisson_deviance => poisson_deviance,
-    :gamma_deviance => gamma_deviance,
-    :tweedie_deviance => tweedie_deviance
+    :poisson => poisson_deviance,
+    :gamma => gamma_deviance,
+    :tweedie => tweedie_deviance
 )
 
 is_maximise(::typeof(mse)) = false

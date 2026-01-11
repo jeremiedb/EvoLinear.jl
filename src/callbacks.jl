@@ -19,7 +19,6 @@ end
 function CallBack(
     config::EvoLinearTypes,
     deval;
-    metric,
     feature_names,
     target_name,
     weight_name=nothing
@@ -27,17 +26,17 @@ function CallBack(
     T = Float32
     nobs = Tables.DataAPI.nrow(deval)
     nfeats = length(feature_names)
-    feval = metric_dict[metric]
+    feval = metric_dict[config.metric]
 
     x = zeros(T, nobs, nfeats)
     @threads for j in axes(x, 2)
         @views x[:, j] .= Tables.getcolumn(deval, feature_names[j])
     end
-    y = Tables.getcolumn(deval, target_name)
+    y = Tables.getcolumn(deval, Symbol(target_name))
     y = convert(Vector{T}, y)
     p = zero(y)
 
-    w = isnothing(weight_name) ? ones(T, nobs) : convert(Vector{T}, Tables.getcolumn(deval, weight_name))
+    w = isnothing(weight_name) ? ones(T, nobs) : convert(Vector{T}, Tables.getcolumn(deval, Symbol(weight_name)))
 
     return CallBack(feval, x, p, y, w)
 end

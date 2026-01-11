@@ -21,9 +21,9 @@ eval_idx = setdiff(1:nobs, train_idx)
 dtrain = dtot[train_idx, :]
 deval = dtot[eval_idx, :]
 
-config = EvoLinearRegressor(nrounds=100, loss=:mse, eta=0.3, L1=0e-1, L2=1)
+config = EvoLinearRegressor(nrounds=100, loss=:mse, eta=0.3, L1=0e-1, L2=1, early_stopping_rounds=10)
 # @time m = EvoLinear.fit(config, dtrain; target_name, feature_names);
-@time m = EvoLinear.fit(config, dtrain; target_name, feature_names, deval=dtrain, metric=:mae, print_every_n=5);
+@time m = EvoLinear.fit(config, dtrain; target_name, feature_names, deval=dtrain, print_every_n=5);
 # @time m, logger = EvoLinear.fit(config; x_train, y_train, metric=:mae, x_eval = x_train, y_eval = y_train, print_every_n = 5, return_logger = true);
 # @btime m, logger = EvoLinear.fit(config; x_train, y_train, metric=:mae, x_eval = x_train, y_eval = y_train, print_every_n = 5, return_logger = true);
 sum(m.coef .== 0)
@@ -37,43 +37,40 @@ config = EvoLinear.EvoLinearRegressor(nrounds=10, loss=:mse, L1=1e-1, L2=1e-2)
 # @btime EvoLinear.fit!($m, $cache, $config; x=$x, y=$y)
 @code_warntype EvoLinear.fit!(m0, cache, config)
 
-
 p = EvoLinear.predict(m, dtrain)
 @time m(dtrain);
 @btime m($dtrain);
 
 @btime metric = EvoLinear.Metrics.mse(p, cache.y)
 @btime metric = EvoLinear.Metrics.mse(p, cache.y, cache.w)
-
-metric = EvoLinear.Metrics.mse(p, y_train)
-metric = EvoLinear.Metrics.mae(p, y_train)
+metric = EvoLinear.Metrics.mse(p, dtrain[!, target_name])
 
 
-#####################################
-# XGBoost
-#####################################
-@info "xgboost train"
-using XGBoost
+# #####################################
+# # XGBoost
+# #####################################
+# @info "xgboost train"
+# using XGBoost
 
-x_train = dtrain[:, feature_names]
-y_train = dtrain[:, target_name]
+# x_train = dtrain[:, feature_names]
+# y_train = dtrain[:, target_name]
 
-# xgboost aprams
-params_xgb = [
-    :booster => "gblinear",
-    :updater => "shotgun", # shotgun / coord_descent
-    :eta => 0.1,
-    :lambda => 0.0,
-    :num_round => nrounds,
-    :objective => "reg:squarederror",
-    :print_every_n => 5]
+# # xgboost aprams
+# params_xgb = [
+#     :booster => "gblinear",
+#     :updater => "shotgun", # shotgun / coord_descent
+#     :eta => 0.1,
+#     :lambda => 0.0,
+#     :num_round => nrounds,
+#     :objective => "reg:squarederror",
+#     :print_every_n => 5]
 
-nthread = Threads.nthreads()
+# nthread = Threads.nthreads()
 
-# metrics = ["rmse"]
-metric_xgb = ["mae"]
-# metrics = ["logloss"]
+# # metrics = ["rmse"]
+# metric_xgb = ["mae"]
+# # metrics = ["logloss"]
 
-dtrain_xgb = DMatrix(x_train, y_train)
-watchlist = Dict("train" => DMatrix(x_train, y_train))
-@time m_xgb = xgboost(dtrain_xgb; watchlist, nthread, verbosity=0, silent=0, eval_metric=metric_xgb, params_xgb...)
+# dtrain_xgb = DMatrix(x_train, y_train)
+# watchlist = Dict("train" => DMatrix(x_train, y_train))
+# @time m_xgb = xgboost(dtrain_xgb; watchlist, nthread, verbosity=0, silent=0, eval_metric=metric_xgb, params_xgb...)

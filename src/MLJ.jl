@@ -1,48 +1,30 @@
-function MMI.fit(model::EvoLinearRegressor, verbosity::Int, A, y, w=nothing)
+function MMI.fit(learner::EvoLinearRegressor, verbosity::Int, A, y, w=nothing)
     A = isa(A, AbstractMatrix) ? Tables.columntable(Tables.table(A)) : Tables.columntable(A)
-    fitresult, cache = init(model, A, y)
-    while cache[:info][:nrounds] < model.nrounds
-        fit!(fitresult, cache, model)
+    m, cache = init(learner; features=A, target=y, weight=w)
+    while m.info[:nrounds] < learner.nrounds
+        fit!(m, cache, learner)
     end
-    report = (coef=fitresult.coef, bias=fitresult.bias, names=A.names)
-    return fitresult, cache, report
+    report = (coef=m.coef, bias=m.bias, names=m.info[:feature_names])
+    return m, cache, report
 end
 
-function okay_to_continue(model, fitresult, cache)
-    return model.nrounds - cache[:info][:nrounds] >= 0 &&
-           get_loss_type(fitresult) == get_loss_type(model)
+function okay_to_continue(config, m, cache)
+    return config.nrounds - m.info[:nrounds] >= 0
 end
 
-function MMI.update(model::EvoLinearRegressor, verbosity::Integer, fitresult, cache, A, y)
-    if okay_to_continue(model, fitresult, cache)
-        while cache[:info][:nrounds] < model.nrounds
-            fit!(fitresult, cache, model)
+function MMI.update(learner::EvoLinearRegressor, verbosity::Integer, m, cache, A, y, w=nothing)
+    if okay_to_continue(learner, m, cache)
+        while m.info[:nrounds] < learner.nrounds
+            fit!(m, cache, learner)
         end
-        report = (coef=fitresult.coef, bias=fitresult.bias, names=A.names)
+        report = (coef=m.coef, bias=m.bias, names=m.info[:feature_names])
     else
-        fitresult, cache, report = fit(model, verbosity, A, y)
+        m, cache, report = fit(learner, verbosity, A, y, w)
     end
-    return fitresult, cache, report
+    return m, cache, report
 end
 
-function predict(::EvoLinearRegressor, fitresult, A)
-    pred = fitresult(A.matrix)
-    return pred
-end
-
-# Generate names to be used by feature_importances in the report
-MMI.reformat(::EvoLinearTypes, X, y) =
-    ((matrix=MMI.matrix(X), names=[name for name ∈ schema(X).names]), y)
-MMI.reformat(::EvoLinearTypes, X) =
-    ((matrix=MMI.matrix(X), names=[name for name ∈ schema(X).names]),)
-MMI.reformat(::EvoLinearTypes, X::AbstractMatrix, y) =
-    ((matrix=X, names=["feat_$i" for i = 1:size(X, 2)]), y)
-MMI.reformat(::EvoLinearTypes, X::AbstractMatrix) =
-    ((matrix=X, names=["feat_$i" for i = 1:size(X, 2)]),)
-MMI.selectrows(::EvoLinearTypes, I, A, y) =
-    ((matrix=view(A.matrix, I, :), names=A.names), view(y, I))
-MMI.selectrows(::EvoLinearTypes, I, A) =
-    ((matrix=view(A.matrix, I, :), names=A.names),)
+predict(::EvoLinearRegressor, m::EvoLinearModel, A) = m(A)
 
 # For EarlyStopping.jl supportm
 MMI.iteration_parameter(::Type{<:EvoLinearTypes}) = :nrounds
@@ -64,6 +46,6 @@ MMI.metadata_model(
         MMI.Table(MMI.Continuous, MMI.Count, MMI.OrderedFactor),
     },
     target_scitype=AbstractVector{<:MMI.Continuous},
-    weights=false,
+    supports_weights=true,
     path="EvoLinear.EvoLinearRegressor",
 )

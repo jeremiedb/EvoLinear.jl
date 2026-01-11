@@ -45,8 +45,9 @@ Then, we use [`NeuroTreeModels.fit`](@ref) to train a boosted tree model. We pas
 ```julia
 config = EvoLinearRegressor(
     loss=:mse,
-    nrounds=5000,
-    eta=5e-1,
+    nrounds=2000,
+    eta=5e-2,
+    early_stopping_rounds=10,
 )
 
 m = EvoLinear.fit(
@@ -55,9 +56,7 @@ m = EvoLinear.fit(
     deval,
     target_name,
     feature_names,
-    metric=:mse,
     print_every_n=100,
-    early_stopping_rounds=10,
 )
 ```
 
@@ -72,8 +71,8 @@ p_eval = m(deval) .* _std .+ _mean
 
 ```julia-repl
 julia> mean(abs.(p_train .- dtrain[!, "MEDV"]))
-0.8985784079860025
+3.529670689982632
 
 julia> mean(abs.(p_eval .- deval[!, "MEDV"]))
-2.3287859731914597
+3.1556790315879324
 ```

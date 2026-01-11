@@ -1,5 +1,6 @@
-using EvoLinear
 using Test
+using EvoLinear
+using DataFrames
 using Statistics: mean, std
 using Random: seed!
 

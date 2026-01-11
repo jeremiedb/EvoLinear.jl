@@ -3,32 +3,24 @@ module Losses
 using Base.Threads: @threads
 using LoopVectorization
 
-export Loss, MSE, Logistic, Poisson, Gamma, Tweedie, loss_types
+export Loss, MSE, LogLoss, Poisson, Gamma, Tweedie, loss_types
 export update_∇!, update_∇_bias!
 
 abstract type Loss end
 struct MSE <: Loss end
-struct Logistic <: Loss end
+struct LogLoss <: Loss end
 struct Poisson <: Loss end
 struct Gamma <: Loss end
 struct Tweedie <: Loss end
 
 const loss_types = Dict(
     :mse => MSE,
-    :logistic => Logistic,
-    :poisson_deviance => Poisson,
-    :gamma_deviance => Gamma,
-    :tweedie_deviance => Tweedie,
+    :logloss => LogLoss,
+    :poisson => Poisson,
+    :gamma => Gamma,
+    :tweedie => Tweedie,
 )
 
-# function init_∇¹(x)
-#     ∇¹ = zeros(size(x, 2))
-#     return ∇¹
-# end
-# function init_∇²(x)
-#     ∇² = zeros(size(x, 2))
-#     return ∇²
-# end
 
 """
     update_∇!(L, ∇¹, ∇², x, y, p, w)
@@ -67,9 +59,9 @@ function update_∇_bias!(::Type{MSE}, ∇_bias, x, y, p, w)
 end
 
 ###################################
-# logistic
+# LogLoss
 ###################################
-function update_∇!(::Type{Logistic}, ∇¹, ∇², x, y, p, w, feat)
+function update_∇!(::Type{LogLoss}, ∇¹, ∇², x, y, p, w, feat)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
         ∇1 += (p[i] - y[i]) * x[i, feat] * w[i]
@@ -79,7 +71,7 @@ function update_∇!(::Type{Logistic}, ∇¹, ∇², x, y, p, w, feat)
     ∇²[feat] = ∇2
     return nothing
 end
-function update_∇_bias!(::Type{Logistic}, ∇_bias, x, y, p, w)
+function update_∇_bias!(::Type{LogLoss}, ∇_bias, x, y, p, w)
     ∇1, ∇2 = zero(eltype(p)), zero(eltype(p))
     @turbo for i in axes(x, 1)
         ∇1 += (p[i] - y[i]) * w[i]

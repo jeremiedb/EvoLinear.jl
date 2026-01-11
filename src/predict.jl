@@ -40,7 +40,7 @@ end
 function proj!(::L, p) where {L<:Type{MSE}}
     return nothing
 end
-function proj!(::L, p) where {L<:Type{Logistic}}
+function proj!(::L, p) where {L<:Type{LogLoss}}
     p .= sigmoid.(p)
     return nothing
 end
