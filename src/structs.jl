@@ -26,7 +26,14 @@ A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](http
     - `:poisson`
     - `:gamma`
     - `:tweedie`
-
+- `metric`:     The evaluation metric used to track evaluation data and serves as a basis for early stopping. Supported metrics are: 
+  - `:mse`:     Mean-squared error. Adapted for general regression models.
+  - `:rmse`:    Root-mean-squared error. Adapted for general regression models.
+  - `:mae`:     Mean absolute error. Adapted for general regression models.
+  - `:logloss`: Adapted for `:logistic` regression models.
+  - `:poisson`: Poisson deviance. Adapted to `EvoTreeCount` count models.
+  - `:gamma`:   Gamma deviance. Adapted to regression problem on Gamma like, positively distributed targets.
+  - `:tweedie`: Tweedie deviance. Adapted to regression problem on Tweedie like, positively distributed targets with probability mass at `y == 0`.
 - `nrounds=10`: maximum number of training rounds.
 - `eta=1`: Learning rate. Typically in the range `[1e-2, 1]`.
 - `L1=0`: Regularization penalty applied by shrinking to 0 weight update if update is < L1. No penalty if update > L1. Results in sparse feature selection. Typically in the `[0, 1]` range on normalized features.
@@ -50,7 +57,7 @@ A model is built using [`fit`](@ref):
 
 ```julia
 config = EvoLinearRegressor()
-m = fit(config; x, y, w)
+m = fit(config, date; feature_names, target_name)
 ```
 
 ## Inference
