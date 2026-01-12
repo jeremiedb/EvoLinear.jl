@@ -12,7 +12,7 @@ makedocs(;
         devurl="dev"
     ),
     pages=[
-        "Home" => "index.md",
+        "Home" => "intro.md",
         "API" => "api.md",
         "Tutorials" => [
             "Regression - Boston" => "tutorials/regression-boston.md",
