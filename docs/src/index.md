@@ -18,7 +18,7 @@ hero:
       link: /api
     - theme: alt
       text: Tutorials
-      link: /tutorials-logistic-titanic.md
+      link: /tutorials/regression-boston.md
     - theme: alt
       text: Source code
       link: https://github.com/jeremiedb/EvoLinear.jl

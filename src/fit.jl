@@ -125,12 +125,12 @@ Provided a `config`, `EvoLinear.fit` takes `x` and `y` as features and target in
 
 # Keyword arguments
 
-    - `target_name: 
-    - `feature_names=nothing: 
-    - `weight_name=nothing: 
-    - `deval=nothing: 
-    - `print_every_n=9999: 
-    - `verbosity=1: 
+- `target_name: 
+- `feature_names=nothing: 
+- `weight_name=nothing: 
+- `deval=nothing: 
+- `print_every_n=9999: 
+- `verbosity=1: 
 """
 function fit(
     learner::EvoLinearRegressor,

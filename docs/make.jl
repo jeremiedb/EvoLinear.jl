@@ -14,6 +14,10 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "API" => "api.md",
+        "Tutorials" => [
+            "Regression - Boston" => "tutorials/regression-boston.md",
+            "Logistic - Titanic" => "tutorials/logistic-titanic.md",
+        ]
     ],
     warnonly=true,
     checkdocs=:all,
