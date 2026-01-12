@@ -27,11 +27,11 @@ A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](http
     - `:gamma`
     - `:tweedie`
 - `metric`:     The evaluation metric used to track evaluation data and serves as a basis for early stopping. Supported metrics are: 
-  - `:mse`:     Mean-squared error. Adapted for general regression models.
-  - `:rmse`:    Root-mean-squared error. Adapted for general regression models.
+  - `:mse`:     Mean squared error. Adapted for general regression models.
+  - `:rmse`:    Root mean squared error. Adapted for general regression models.
   - `:mae`:     Mean absolute error. Adapted for general regression models.
-  - `:logloss`: Adapted for `:logistic` regression models.
-  - `:poisson`: Poisson deviance. Adapted to `EvoTreeCount` count models.
+  - `:logloss`: Adapted for `logistic` regression models.
+  - `:poisson`: Poisson deviance. Adapted for count models.
   - `:gamma`:   Gamma deviance. Adapted to regression problem on Gamma like, positively distributed targets.
   - `:tweedie`: Tweedie deviance. Adapted to regression problem on Tweedie like, positively distributed targets with probability mass at `y == 0`.
 - `nrounds=10`: maximum number of training rounds.
@@ -40,7 +40,6 @@ A model type for constructing a EvoLinearRegressor, based on [EvoLinear.jl](http
 - `L2=0`: Regularization penalty applied to the squared of the weight update value. Restricts large parameter values. Typically in the `[0, 1]` range on normalized features.
 - `seed::Int=123`: random seed.
 - `updater=:all`: training method. Only `:all` is supported at the moment. Gradients for each feature are computed simultaneously, then bias is updated based on all features update. 
-- `device=:cpu`: Only `:cpu` is supported at the moment.
 
 # Internal API
 
