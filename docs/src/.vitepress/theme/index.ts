@@ -9,11 +9,8 @@ import {
   NolebaseEnhancedReadabilitiesScreenMenu,
 } from '@nolebase/vitepress-plugin-enhanced-readabilities/client'
 
-import AsideTrustees from '@/AsideTrustees.vue'
 import VersionPicker from "@/VersionPicker.vue"
 import StarUs from '@/StarUs.vue'
-import AuthorBadge from '@/AuthorBadge.vue'
-import Authors from '@/Authors.vue'
 import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 
 import '@nolebase/vitepress-plugin-enhanced-readabilities/client/style.css'
@@ -24,7 +21,6 @@ export const Theme: ThemeConfig = {
   extends: DefaultTheme,
   Layout() {
     return h(DefaultTheme.Layout, null, {
-      'aside-ads-before': () => h(AsideTrustees),
       'nav-bar-content-after': () => [
         h(StarUs),
         h(NolebaseEnhancedReadabilitiesMenu), // Enhanced Readabilities menu
@@ -36,8 +32,6 @@ export const Theme: ThemeConfig = {
   enhanceApp({ app, router, siteData }) {
     enhanceAppWithTabs(app);
     app.component('VersionPicker', VersionPicker);
-    app.component('AuthorBadge', AuthorBadge)
-    app.component('Authors', Authors)
   }
 }
 export default Theme
